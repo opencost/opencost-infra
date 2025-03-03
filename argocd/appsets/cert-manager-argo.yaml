@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cert-manager
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/kubecost/opencost-infra.git
+      revision: HEAD
+      files:
+      - path: "apps/*/cert-manager/values.yaml"
+  template:
+    metadata:
+      name: 'cert-manager-{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://charts.jetstack.io
+        targetRevision: v1.13.2
+        chart: cert-manager
+        helm:
+          valueFiles:
+          - '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: cert-manager
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true

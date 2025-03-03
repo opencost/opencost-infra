@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: opencost
+spec:
+  generators:
+  - git:
+      repoURL: https://github.com/kubecost/opencost-infra.git
+      revision: HEAD
+      files:
+      - path: "apps/*/opencost/values.yaml"
+  template:
+    metadata:
+      name: 'opencost-{{path.basename}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://opencost.github.io/opencost-helm-chart
+        targetRevision: 1.16.3
+        chart: opencost
+        helm:
+          valueFiles:
+          - '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: opencost
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
