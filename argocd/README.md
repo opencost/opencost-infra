@@ -1,0 +1,1 @@
+This folder holds argo related resources for deploying OpenCost.
