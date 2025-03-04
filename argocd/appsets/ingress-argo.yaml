@@ -13,7 +13,7 @@ spec:
     metadata:
       name: 'ingress-nginx-{{path.basename}}'
       labels:
-        debug.argocd.argoproj.io/revision: '{{path}}'
+        debug.argocd.argoproj.io/revision: '{{path.segments 2}}'
     spec:
       project: default
       sources:
