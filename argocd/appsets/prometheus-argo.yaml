@@ -3,27 +3,34 @@ kind: ApplicationSet
 metadata:
   name: prometheus
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
-      repoURL: https://github.com/kubecost/opencost-infra.git
-      revision: HEAD
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: atm/argo-setup
       files:
-      - path: "apps/*/prometheus/values.yaml"
+      - path: "argocd/apps/*/prometheus/values.yaml"
   template:
     metadata:
-      name: 'prometheus-{{path.basename}}'
+      name: 'prometheus-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
     spec:
       project: default
-      source:
-        repoURL: https://prometheus-community.github.io/helm-charts
-        targetRevision: 27.5.1
-        chart: prometheus
-        helm:
-          valueFiles:
-          - '{{path}}'
+      sources:
+        - repoURL: https://prometheus-community.github.io/helm-charts
+          targetRevision: 27.5.1
+          chart: prometheus
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/prometheus/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: atm/argo-setup
+          ref: values
       destination:
         server: https://kubernetes.default.svc
-        namespace: prometheus
+        namespace: alex
       syncPolicy:
         automated:
           prune: true
