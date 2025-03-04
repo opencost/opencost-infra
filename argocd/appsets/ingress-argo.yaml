@@ -20,7 +20,7 @@ spec:
         chart: ingress-nginx
         helm:
           valueFiles:
-          - '{{path}}'
+          - 'argocd/apps/{{index .path.segments 3}}/ingress-nginx/values.yaml'
       destination:
         server: https://kubernetes.default.svc
         namespace: alex
