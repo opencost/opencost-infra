@@ -19,9 +19,9 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: https://opencost.github.io/opencost-helm-chart
-          targetRevision: 1.45.0
-          chart: opencost
+        - repoURL: https://github.com/opencost/opencost-helm-chart.git
+          targetRevision: main
+          path: charts/opencost
           helm:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/opencost/values.yaml'
