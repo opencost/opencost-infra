@@ -8,7 +8,7 @@ spec:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: atm/argo-setup
       files:
-      - path: "apps/*/ingress-nginx/values.yaml"
+      - path: "argocd/apps/*/ingress-nginx/values.yaml"
   template:
     metadata:
       name: 'ingress-nginx-{{path.basename}}'
