@@ -3,6 +3,8 @@ kind: ApplicationSet
 metadata:
   name: ingress-nginx
 spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
