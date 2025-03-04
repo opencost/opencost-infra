@@ -20,7 +20,7 @@ spec:
           chart: ingress-nginx
           helm:
             valueFiles:
-            - $values/argocd/apps/{{index .path.segments 3}}/ingress-nginx/values.yaml
+            - '$values/argocd/apps/{{index .path.segments 3}}/ingress-nginx/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: atm/argo-setup
           ref: values
