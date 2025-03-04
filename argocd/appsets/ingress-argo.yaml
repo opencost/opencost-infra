@@ -6,7 +6,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: HEAD
+      revision: atm/argo-setup
       files:
       - path: "apps/*/ingress-nginx/values.yaml"
   template:
