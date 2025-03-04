@@ -5,7 +5,7 @@ metadata:
 spec:
   generators:
   - git:
-      repoURL: https://github.com/kubecost/opencost-infra.git
+      repoURL: https://github.com/opencost/opencost-infra.git
       revision: HEAD
       files:
       - path: "apps/*/ingress-nginx/values.yaml"
@@ -23,7 +23,7 @@ spec:
           - '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: ingress-nginx
+        namespace: alex
       syncPolicy:
         automated:
           prune: true
