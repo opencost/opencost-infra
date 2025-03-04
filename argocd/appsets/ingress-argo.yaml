@@ -12,6 +12,8 @@ spec:
   template:
     metadata:
       name: 'ingress-nginx-{{path.basename}}'
+      labels:
+        debug.argocd.argoproj.io/revision: '{{index .path.segments 2}}'
     spec:
       project: default
       sources:
@@ -20,7 +22,7 @@ spec:
           chart: ingress-nginx
           helm:
             valueFiles:
-            - '$values/argocd/apps/{{index .path.segments 2}}/ingress-nginx/values.yaml'
+            - '$values/argocd/apps/demo/ingress-nginx/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: atm/argo-setup
           ref: values
