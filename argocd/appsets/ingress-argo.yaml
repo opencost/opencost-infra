@@ -13,7 +13,7 @@ spec:
       - path: "argocd/apps/*/ingress-nginx/values.yaml"
   template:
     metadata:
-      name: 'ingress-nginx-{{path.basename}}'
+      name: 'ingress-nginx-{{ .path.basename}}'
       labels:
         debug.argocd.argoproj.io/revision: '{{ index .path.segments 2 }}'
     spec:
