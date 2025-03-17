@@ -28,6 +28,9 @@ spec:
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: atm/argo-setup
           ref: values
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: atm/argo-setup
+          path: "argocd/apps/*/cert-manager/clusterissuer.yaml"
       destination:
         server: https://kubernetes.default.svc
         namespace: cert-manager
