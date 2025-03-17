@@ -1,0 +1,15 @@
+_1: &email Christian.Petersen2@ibm.com
+_2: &solvers
+- http01:
+    ingress:
+      class: nginx
+
+clusterIssuers:
+- name: letsencrypt-prod
+  spec:
+    acme:
+      email: *email
+      server: https://acme-v02.api.letsencrypt.org/directory
+      privateKeySecretRef:
+        name: letsencrypt-prod-account-key
+      solvers: *solvers

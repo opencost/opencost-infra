@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cert-manager
+  name: cluster-issuer
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -10,21 +10,21 @@ spec:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: atm/argo-setup
       files:
-      - path: "argocd/apps/*/cert-manager/values.yaml"
+      - path: "argocd/apps/*/cluster-issuer/values.yaml"
   template:
     metadata:
-      name: 'cert-manager-{{ index .path.segments 2 }}'
+      name: 'cluster-issuer-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
     spec:
       project: default
       sources:
-        - repoURL: https://charts.jetstack.io
-          targetRevision: v1.17.0
-          chart: cert-manager
+        - repoURL: https://charts.adfinis.com
+          targetRevision: 0.3.0
+          chart: cert-manager-issuers
           helm:
             valueFiles:
-            - '$values/argocd/apps/{{ index .path.segments 2 }}/cert-manager/values.yaml'
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/cluster-issuer/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: atm/argo-setup
           ref: values
