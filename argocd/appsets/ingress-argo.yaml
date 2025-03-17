@@ -6,11 +6,17 @@ spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
   generators:
-  - git:
-      repoURL: https://github.com/opencost/opencost-infra.git
-      revision: atm/argo-setup
-      files:
-      - path: "argocd/apps/demo/ingress-nginx/values.yaml"
+  - list:
+      elements:
+      - cluster: engineering-dev
+        url: https://kubernetes.default.svc
+      # - cluster: engineering-prod
+      #   url: https://kubernetes.default.svc
+  # - git:
+  #     repoURL: https://github.com/opencost/opencost-infra.git
+  #     revision: atm/argo-setup
+  #     files:
+  #     - path: "argocd/apps/demo/ingress-nginx/values.yaml"
   template:
     metadata:
       name: 'ingress-nginx-{{ index .path.segments 2 }}'
