@@ -30,7 +30,7 @@ spec:
           ref: values
       destination:
         server: https://kubernetes.default.svc
-        namespace: alex
+        namespace: ingress-nginx
       syncPolicy:
         automated:
           prune: true
