@@ -9,6 +9,9 @@ opencost:
         cert-manager.io/cluster-issuer: "letsencrypt-demo"
       hosts:
         - host: demo.infra.opencost.io
+          paths:
+            - path: /
+              pathType: Prefix
       tls:
         - secretName: opencost-tls # Name of the TLS secret
           hosts:
