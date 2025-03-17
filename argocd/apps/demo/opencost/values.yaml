@@ -10,14 +10,11 @@ opencost:
       hosts:
         - host: demo.infra.opencost.io
           paths:
-            - path: "/"
-              pathType: ImplementationSpecific
+            - /
       tls:
         - secretName: opencost-tls # Name of the TLS secret
           hosts:
             - demo.infra.opencost.io
-
-### This isn't being created for some reason. Investigate why. Provide hostname maybe? 
 
 ### End goal is an SSL cert manager connection with a public load balancer pointing to the cluster IP
 ### Visit: https://demo.infra.opencost.io
