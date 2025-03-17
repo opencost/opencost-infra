@@ -5,11 +5,11 @@ _2: &solvers
       class: nginx
 
 clusterIssuers:
-- name: letsencrypt-prod
+- name: letsencrypt-demo
   spec:
     acme:
       email: *email
       server: https://acme-v02.api.letsencrypt.org/directory
       privateKeySecretRef:
-        name: letsencrypt-prod-account-key
+        name: letsencrypt-demo-account-key
       solvers: *solvers
