@@ -30,7 +30,7 @@ spec:
           ref: values
       destination:
         server: https://kubernetes.default.svc
-        namespace: alex
+        namespace: cert-manager
       syncPolicy:
         automated:
           prune: true
