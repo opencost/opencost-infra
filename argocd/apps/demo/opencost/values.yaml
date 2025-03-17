@@ -10,8 +10,8 @@ opencost:
       hosts:
         - host: demo.infra.opencost.io
           paths:
-            - path: /
-              pathType: Prefix
+            - path: "/"
+              pathType: ImplementationSpecific
       tls:
         - secretName: opencost-tls # Name of the TLS secret
           hosts:
