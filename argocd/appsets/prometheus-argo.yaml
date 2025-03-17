@@ -13,7 +13,7 @@ spec:
       - path: "argocd/apps/*/prometheus/values.yaml"
   template:
     metadata:
-      name: 'prometheus-{{ index .path.segments 2 }}'
+      name: 'prometheus'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
     spec:
@@ -30,7 +30,7 @@ spec:
           ref: values
       destination:
         server: https://kubernetes.default.svc
-        namespace: prometheus
+        namespace: prometheus-system
       syncPolicy:
         automated:
           prune: true
