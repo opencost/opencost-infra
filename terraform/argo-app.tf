@@ -9,7 +9,7 @@ resource "kubernetes_manifest" "argocd_application" {
         stage = "${var.environment}-app"
         app = "opencost"
       }
-    #   finalizers = ["resources-finalizer.argocd.argoproj.io"]
+
     }
     spec = {      
       project = "default"

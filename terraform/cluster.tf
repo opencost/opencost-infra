@@ -57,8 +57,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
 
   node_config_details {
     placement_configs {
-      # avRo:US-ASHBURN-AD-2 is the only AD in Ashburn that has the VM.GPU2.1 GPU node shape. 
-      availability_domain = "avRo:US-ASHBURN-AD-2"
+      availability_domain = var.availability_domain
       subnet_id          = module.oke.worker_subnet_id
     }
     size = 1

@@ -4,6 +4,12 @@ variable "region" {
   default       = "us-ashburn-1"
 }
 
+variable "availability_domain" {
+  description   = "The availability domain within the OCI region where resources will be deployed. avRo:US-ASHBURN-AD-2 is the only AD in Ashburn that contains the VM.GPU2.1 GPU node shape."
+  type          = string
+  default       = "avRo:US-ASHBURN-AD-2"
+}
+
 variable "tenancy_id" {
   description = "The tenancy id of the OCI Cloud Account in which to create the resources."
   type        = string
