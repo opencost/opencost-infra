@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name:  opencost
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: atm/argo-setup
+      files:
+      - path: "argocd/apps/*/opencost/values.yaml"
+  template:
+    metadata:
+      name: 'opencost-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://github.com/opencost/opencost-helm-chart.git
+          targetRevision: main
+          path: charts/opencost
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/opencost/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: atm/argo-setup
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: opencost
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+

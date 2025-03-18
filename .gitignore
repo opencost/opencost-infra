@@ -1,0 +1,6 @@
+# Files to ignore
+kubeconfig
+*.tfstate
+*.tfvars
+.terraform.lock.hcl
+.terraform
