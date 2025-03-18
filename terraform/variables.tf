@@ -102,6 +102,6 @@ variable "argo_settings" {
 
   default = {
     source_repo_url = "https://github.com/opencost/opencost-infra.git"
-    target_revision = "atm/argo-setup"
+    target_revision = "main"
   }
 }

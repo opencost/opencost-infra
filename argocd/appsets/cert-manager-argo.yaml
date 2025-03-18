@@ -8,7 +8,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: atm/argo-setup
+      revision: main
       files:
       - path: "argocd/apps/*/cert-manager/values.yaml"
   template:
@@ -26,7 +26,7 @@ spec:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/cert-manager/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: atm/argo-setup
+          targetRevision: main
           ref: values
       destination:
         server: https://kubernetes.default.svc
