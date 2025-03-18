@@ -1,7 +1,6 @@
 # Files to ignore
-*.tfstate
 kubeconfig
+*.tfstate
 *.tfvars
 .terraform.lock.hcl
 .terraform
-*.tfvars
