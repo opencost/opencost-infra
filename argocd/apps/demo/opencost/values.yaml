@@ -12,9 +12,6 @@ opencost:
           paths:
             - /
       tls:
-        - secretName: opencost-tls # Name of the TLS secret
+        - secretName: opencost-tls
           hosts:
             - demo.infra.opencost.io
-
-### End goal is an SSL cert manager connection with a public load balancer pointing to the cluster IP
-### Visit: https://demo.infra.opencost.io
