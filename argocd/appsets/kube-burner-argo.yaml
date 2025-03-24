@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kube-burner
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: cdp/kcm-3646
+      files:
+      - path: "argocd/apps/*/kube-burner/values.yaml"
+  template:
+    metadata:
+      name: 'kube-burner-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        # - repoURL: https://github.com/opencost/opencost-helm-chart.git
+        - repoURL: https://github.com/kube-burner/kube-burner
+          targetRevision: v1.14.3
+          path: charts/kube-burner
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/kube-burner/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: cdp/kcm-3646
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: kube-burner
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+
