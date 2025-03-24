@@ -27,7 +27,7 @@ spec:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/kube-burner/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: main
+          targetRevision: cdp/kcm-3646
           ref: values
       destination:
         server: https://kubernetes.default.svc
