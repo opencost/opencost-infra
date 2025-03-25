@@ -1,3 +1,7 @@
+prometheus-pushgateway:
+  enabled: false
+alertmanager:
+  enabled: false
 extraScrapeConfigs: |
   - job_name: opencost
     honor_labels: true
