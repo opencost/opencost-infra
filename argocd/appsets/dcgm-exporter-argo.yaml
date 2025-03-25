@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: dcgm-exporter
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: cdp/kcm-3646
+      files:
+      - path: "argocd/apps/*/dcgm-exporter/values.yaml"
+  template:
+    metadata:
+      name: 'dcgm-exporter-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://nvidia.github.io/dcgm-exporter/helm-charts
+          chart:  gpu-helm-charts/dcgm-exporter
+          targetRevision: 4.0.4
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/dcgm-exporter/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: cdp/kcm-3646
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: dcgm-exporter
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
