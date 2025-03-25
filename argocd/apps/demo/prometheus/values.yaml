@@ -34,8 +34,3 @@ prometheus:
         endpoints:
           - port: metrics
             interval: 30s
-
-prometheus-pushgateway:
-  enabled: false
-alertmanager:
-  enabled: false
