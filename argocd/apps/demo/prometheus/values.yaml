@@ -1,3 +1,22 @@
+prometheusOperator:
+  enabled: true
+
+prometheus:
+  serviceMonitor:
+    selfMonitor: true
+
+  additionalServiceMonitors:
+    - name: "dcgm-exporter"
+      namespaceSelector:
+        matchNames:
+          - dcgm-exporter
+      selector:
+        matchLabels:
+          app: dcgm-exporter
+      endpoints:
+        - port: metrics
+          interval: 30s
+
 prometheus-pushgateway:
   enabled: false
 alertmanager:
