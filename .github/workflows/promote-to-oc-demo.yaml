@@ -4,7 +4,7 @@ on:
   workflow_call:
       inputs:
         img-fqdn:
-          description: 'backend image to set'
+          description: 'image to set'
           type: string
           required: true
         is_be:
