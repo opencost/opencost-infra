@@ -18,5 +18,5 @@ opencost:
 
   prometheus:
     internal:
-      service-name: prometheus-kube-prometheus-prometheus
+      serviceName: prometheus-kube-prometheus-prometheus
       port: 9090
