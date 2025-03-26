@@ -15,3 +15,8 @@ opencost:
         - secretName: opencost-tls
           hosts:
             - demo.infra.opencost.io
+
+  prometheus:
+    internal:
+      service-name: prometheus-kube-prometheus-prometheus
+      port: 9090

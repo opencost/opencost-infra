@@ -20,8 +20,8 @@ spec:
       project: default
       sources:
         - repoURL: https://prometheus-community.github.io/helm-charts
-          targetRevision: 27.5.1
-          chart: prometheus
+          targetRevision: 70.3.0
+          chart: kube-prometheus-stack
           helm:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/prometheus/values.yaml'
@@ -37,3 +37,4 @@ spec:
           selfHeal: true
         syncOptions:
         - CreateNamespace=true
+        - ServerSideApply=true
