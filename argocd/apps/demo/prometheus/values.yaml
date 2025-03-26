@@ -1,16 +1,36 @@
-prometheus-pushgateway:
+prometheusOperator:
+  enabled: true
+
+grafana:
   enabled: false
+
 alertmanager:
   enabled: false
-extraScrapeConfigs: |
-  - job_name: opencost
-    honor_labels: true
-    scrape_interval: 1m
-    scrape_timeout: 10s
-    metrics_path: /metrics
-    scheme: http
-    dns_sd_configs:
-    - names:
-      - opencost-demo.opencost
-      type: 'A'
-      port: 9003
+
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    additionalScrapeConfigs:
+      - job_name: opencost
+        honor_labels: true
+        scrape_interval: 1m
+        scrape_timeout: 10s
+        metrics_path: /metrics
+        scheme: http
+        dns_sd_configs:
+        - names:
+          - opencost-demo.opencost
+          type: 'A'
+          port: 9003
+
+    additionalServiceMonitors:
+      - name: "dcgm-exporter"
+        namespaceSelector:
+          matchNames:
+            - dcgm-exporter
+        selector:
+          matchLabels:
+            app: dcgm-exporter
+        endpoints:
+          - port: metrics
+            interval: 30s
