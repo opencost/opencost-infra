@@ -64,7 +64,7 @@ jobs:
         
         - name: Enable Auto-merge
           run: |
-            gh pr merge --squash --auto --merge "${{ steps.create-pr.outputs.pull-request-number }}"
+            gh pr merge --squash --auto "${{ steps.create-pr.outputs.pull-request-number }}"
           env:
             GH_TOKEN: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
             GH_REPO: opencost/opencost-infra
