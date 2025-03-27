@@ -73,6 +73,6 @@ jobs:
           run: |
             gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
           env:
-            GH_TOKEN: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
+            GH_TOKEN: ${{ secrets.APPROVE_OC_INFRA_PR_GH_PAT }}
             GH_REPO: opencost/opencost-infra
           
