@@ -50,8 +50,8 @@ jobs:
             token: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
             path: ./
             branch: dep-bump-${{ env.TIMESTAMP }}
-            title: 'Update OC Demo images @ ${{ env.TIMESTAMP }}'
-            commit-message: 'updated image to ${{ inputs.img-fqdn }}'
+            title: '[bot] Update OC Demo images @ ${{ env.TIMESTAMP }}'
+            commit-message: '[bot] updated image to ${{ inputs.img-fqdn }}'
             delete-branch: true
             add-paths: |
               argocd/apps/demo/opencost/values.yaml
@@ -67,12 +67,12 @@ jobs:
             gh pr merge --auto --merge "${{ steps.create-pr.outputs.pull-request-number }}"
           env:
             GH_TOKEN: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
-            GH_REPO: ${{ github.repository }}
+            GH_REPO: opencost/opencost-infra
 
         - name: Approve Pull Request
           run: |
             gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
           env:
             GH_TOKEN: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
-            GH_REPO: ${{ github.repository }}
+            GH_REPO: opencost/opencost-infra
           
