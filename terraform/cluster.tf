@@ -69,7 +69,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     source_type = "IMAGE"
   }
 
-  ### WIP Testing
+  # Install the prerequisites for the DCGM exporter
   node_metadata = {
     user_data = base64encode(<<-EOF
       #cloud-config
@@ -84,7 +84,6 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     EOF
     )
   }
-  ### WIP Testing End
 }
 
 # Retrieves the kubeconfig file content for the specified OCI Container Engine for Kubernetes (OKE) cluster
