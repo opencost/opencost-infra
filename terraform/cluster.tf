@@ -80,7 +80,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
         - sudo dnf module install -y nvidia-driver:latest-dkms
         - sudo dnf install -y nvidia-driver-cuda
         - sudo dnf clean expire-cache
-        - sudo curl --fail -H "Authorization: Bearer Oracle" -L0 http://169.254.169.254/opc/v2/instance/metadata/oke_init_script | base64 --decode >/var/run/oke-init.sh bash /var/run/oke-init.sh
+        - 'sudo curl --fail -H "Authorization: Bearer Oracle" -L0 http://169.254.169.254/opc/v2/instance/metadata/oke_init_script | base64 --decode >/var/run/oke-init.sh && bash /var/run/oke-init.sh'
     EOF
     )
   }
