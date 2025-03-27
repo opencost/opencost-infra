@@ -29,7 +29,7 @@ jobs:
         - uses: actions/checkout@v4
           with:
             ref: 'main'
-            repo: opencost/opencost-infra
+            repository: opencost/opencost-infra
         - name: Set oc be img for develop
           if: ${{ inputs.is_be == true }}
           uses: mikefarah/yq@master
