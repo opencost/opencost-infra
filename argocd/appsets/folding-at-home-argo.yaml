@@ -8,7 +8,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: cdp/kcm-3646
+      revision: fah-alt-chart
       files:
       - path: "argocd/apps/*/folding-at-home/values.yaml"
   template:
@@ -19,14 +19,14 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: https://pcktdmp.github.io/charts
-          chart: fahclient
-          targetRevision: 2.6.0
+        - repoURL: https://github.com/daveneeley/helm-foldingathome.git
+          targetRevision: master
+          path: .
           helm:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/folding-at-home/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: cdp/kcm-3646
+          targetRevision: fah-alt-chart
           ref: values
       destination:
         server: https://kubernetes.default.svc
