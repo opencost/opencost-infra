@@ -68,6 +68,23 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     image_id = var.image_id
     source_type = "IMAGE"
   }
+
+  ### WIP Testing
+  node_metadata = {
+    user_data = base64encode(<<-EOF
+      #cloud-config
+      runcmd:
+        - sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+        - sudo dnf config-manager --set-enable ol8_developer_EPEL
+        - sudo dnf install -y gcc make kernel-headers kernel-devel oracle-epel-release-el8 epel-release dkms
+        - sudo dnf module install -y nvidia-driver:latest-dkms
+        - sudo dnf install -y nvidia-driver-cuda
+        - sudo dnf clean expire-cache
+        - sudo curl --fail -H "Authorization: Bearer Oracle" -L0 http://169.254.169.254/opc/v2/instance/metadata/oke_init_script | base64 --decode >/var/run/oke-init.sh bash /var/run/oke-init.sh
+    EOF
+    )
+  }
+  ### WIP Testing End
 }
 
 # Retrieves the kubeconfig file content for the specified OCI Container Engine for Kubernetes (OKE) cluster
