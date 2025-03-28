@@ -1,0 +1,5 @@
+foldingathome:
+  config:
+    gpu: true
+  nodeSelector:
+    node-role.kubernetes.io/gpu: "true"
