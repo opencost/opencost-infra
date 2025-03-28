@@ -74,9 +74,11 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     user_data = base64encode(<<-EOF
       #cloud-config
       runcmd:
+        - 'sudo curl -s -L https://nvidia.github.io/libnvidia-container/stable/rpm/nvidia-container-toolkit.repo | sudo tee /etc/yum.repos.d/nvidia-container-toolkit.repo'
+        - sudo dnf-config-manager --enable nvidia-container-toolkit-experimental
         - sudo dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
         - sudo dnf config-manager --set-enable ol8_developer_EPEL
-        - sudo dnf install -y gcc make kernel-headers kernel-devel oracle-epel-release-el8 epel-release dkms
+        - sudo dnf install -y gcc make kernel-headers kernel-devel oracle-epel-release-el8 epel-release dkms nvidia-container-toolkit
         - sudo dnf module install -y nvidia-driver:latest-dkms
         - sudo dnf install -y nvidia-driver-cuda
         - sudo dnf clean expire-cache
