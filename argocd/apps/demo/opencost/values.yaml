@@ -17,7 +17,7 @@ opencost:
             - demo.infra.opencost.io
   prometheus:
     internal:
-      service-name: prometheus-kube-prometheus-prometheus
+      serviceName: prometheus-kube-prometheus-prometheus
       port: 9090
   exporter:
     image:

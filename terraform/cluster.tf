@@ -68,6 +68,21 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     image_id = var.image_id
     source_type = "IMAGE"
   }
+
+  # Install and configure Ubuntu worker node for GPU
+  node_metadata = {
+    user_data = base64encode(<<-EOF
+      #cloud-config
+      apt:
+        sources:
+          oke-node: {source: 'deb [trusted=yes] https://objectstorage.us-sanjose-1.oraclecloud.com/p/45eOeErEDZqPGiymXZwpeebCNb5lnwzkcQIhtVf6iOF44eet_efdePaF7T8agNYq/n/odx-oke/b/okn-repositories-private/o/prod/ubuntu-jammy/kubernetes-1.31 stable main'}
+      packages:                                                       
+      - oci-oke-node-all-1.31.1
+      runcmd:
+      - oke bootstrap
+    EOF
+    )
+  }
 }
 
 # Retrieves the kubeconfig file content for the specified OCI Container Engine for Kubernetes (OKE) cluster
