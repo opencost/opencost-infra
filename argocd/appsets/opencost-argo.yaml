@@ -8,7 +8,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: cdp/kcm-3646
+      revision: cdp/kcm-3645-ubuntu
       files:
       - path: "argocd/apps/*/opencost/values.yaml"
   template:
@@ -26,7 +26,7 @@ spec:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/opencost/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: cdp/kcm-3646
+          targetRevision: cdp/kcm-3645-ubuntu
           ref: values
       destination:
         server: https://kubernetes.default.svc
