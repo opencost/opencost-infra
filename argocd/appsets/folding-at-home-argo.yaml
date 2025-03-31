@@ -8,7 +8,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: fah-alt-chart
+      revision: main
       files:
       - path: "argocd/apps/*/folding-at-home/values.yaml"
   template:
@@ -26,7 +26,7 @@ spec:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/folding-at-home/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: fah-alt-chart
+          targetRevision: main
           ref: values
       destination:
         server: https://kubernetes.default.svc
