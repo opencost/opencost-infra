@@ -1,3 +1,3 @@
-operator:
-  defaultRuntime: crio
-  create: false
+cdi:
+  enabled: true
+  default: true
