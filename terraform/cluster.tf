@@ -69,7 +69,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
     source_type = "IMAGE"
   }
 
-  # Install the prerequisites for the DCGM exporter
+  # Install and configure Ubuntu worker node for GPU
   node_metadata = {
     user_data = base64encode(<<-EOF
       #cloud-config
