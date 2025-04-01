@@ -37,7 +37,7 @@ variable "fingerprint" {
 variable "image_id" {
   description = ""
   type = string
-  default = "ocid1.image.oc1.iad.aaaaaaaaodx3zseorumazenalf2kiqpg2n7zawvwhkjp44skkb2tsrw3o5za"
+  default = "ocid1.image.oc1.iad.aaaaaaaauekp2xtllqoidhftbjbt2nifzeihrfxwn7pqjce2nrupiqjs74lq"
 }
 
 variable "nodepools" {

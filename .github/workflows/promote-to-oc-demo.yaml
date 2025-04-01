@@ -1,0 +1,78 @@
+name: Promote to OC Demo
+
+on:
+  workflow_call:
+      inputs:
+        img-fqdn:
+          description: 'image to set'
+          type: string
+          required: true
+        is_be:
+          description: 'is this a backend image'
+          type: boolean
+          required: false
+          default: false
+        is_fe:
+          description: 'is this a frontend image'
+          type: boolean
+          required: false
+          default: false
+
+concurrency:
+  group: cd
+  cancel-in-progress: false
+
+jobs:
+    promote-to-oc-demo:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+          with:
+            ref: 'main'
+            repository: opencost/opencost-infra
+        - name: Set oc be img for develop
+          if: ${{ inputs.is_be == true }}
+          uses: mikefarah/yq@master
+          with:
+              cmd: yq -i '.opencost.exporter.image.fullImageName = "${{ inputs.img-fqdn }}"' './argocd/apps/demo/opencost/values.yaml'
+        - name: set fe img for main branch
+          if: ${{ inputs.is_fe == true }}
+          uses: mikefarah/yq@master
+          with:
+            cmd: yq -i '.opencost.ui.image.fullImageName = "${{ inputs.img-fqdn }}"' './argocd/apps/demo/opencost/values.yaml'
+        - name: Get timestamp
+          run: |
+              echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
+        - name: Create Pull Request
+          id: create-pr
+          uses: peter-evans/create-pull-request@v7
+          with:
+            token: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
+            path: ./
+            branch: dep-bump-${{ env.TIMESTAMP }}
+            title: '[bot] Update OC Demo images @ ${{ env.TIMESTAMP }}'
+            commit-message: '[bot] updated image to ${{ inputs.img-fqdn }}'
+            delete-branch: true
+            add-paths: |
+              argocd/apps/demo/opencost/values.yaml
+            body: |
+              Automated PR to update OC Demo images.
+              
+              This PR was automatically generated after updating helm values.
+            base: main
+            labels: automated,cd
+        
+        - name: Enable Auto-merge
+          run: |
+            gh pr merge --squash --auto "${{ steps.create-pr.outputs.pull-request-number }}"
+          env:
+            GH_TOKEN: ${{ secrets.CREATE_OC_INFRA_PR_GH_PAT }}
+            GH_REPO: opencost/opencost-infra
+
+        - name: Approve Pull Request
+          run: |
+            gh pr review --approve "${{ steps.create-pr.outputs.pull-request-number }}"
+          env:
+            GH_TOKEN: ${{ secrets.APPROVE_OC_INFRA_PR_GH_PAT }}
+            GH_REPO: opencost/opencost-infra
+          
