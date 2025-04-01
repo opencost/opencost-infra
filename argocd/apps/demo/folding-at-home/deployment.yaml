@@ -106,5 +106,5 @@ spec:
               name: fahclient
             # Uncomment if using ConfigMap config.xml
             - name: fah-gpu-cpu-config
-              mountPath: /etc/fahclient-config
+              mountPath: /etc/fahclient
       # priorityClassName: low-priority-class
