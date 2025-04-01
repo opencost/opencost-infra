@@ -74,8 +74,8 @@ spec:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
           volumeMounts:
-            # - mountPath: /var/lib/fahclient
-            #   name: fahclient
+            - mountPath: /var/lib/fahclient
+              name: fahclient
             - mountPath: /etc/fahclient
               name: fah-gpu-cpu-config
       # We make an emptyDir to mount on the work directory /var/lib/fahclient
