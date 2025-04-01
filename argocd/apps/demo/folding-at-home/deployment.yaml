@@ -1,0 +1,110 @@
+# apiVersion: scheduling.k8s.io/v1
+# kind: PriorityClass
+# metadata:
+#   name: low-priority-class
+# value: 10
+# globalDefault: false
+# description: "This priority class should be used for low priority fah-gpu-cpu pods only."
+# ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fah-gpu-cpu
+  labels:
+    app: fah-gpu-cpu  
+spec:
+  selector:
+    matchLabels:
+      app: fah-gpu-cpu
+  replicas: 1 # Set number of replicas to run - one replica per node
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 100%
+      maxSurge: 100%
+  template:
+    metadata:
+      labels:
+        app: fah-gpu-cpu
+    spec:
+      nodeSelector:
+        nvidia.com/gpu: "true"
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "present"
+          effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - fah-gpu-cpu
+            topologyKey: "kubernetes.io/hostname"
+
+      containers:
+        - name: fah-gpu-cpu
+          image: "ghcr.io/richstokes/k8s-fah:master"
+          # --run-as UID should match runAsUser value in containers securityContext
+          command:
+            - "/usr/bin/FAHClient"
+            - "--config"
+            - "/var/lib/fahclient/config.xml"
+            - "--config-rotate=false"
+            - "--run-as"
+            - "1234"
+            - "--pid-file=/var/lib/fahclient/fahclient.pid"
+            - "--gpu=true"
+          resources:
+            limits:
+              nvidia.com/gpu: "1" # How many gpu's you want to donate per node
+              cpu: 16000m # How much CPU you wish to donate per node
+              memory: 50Gi
+            requests:
+              nvidia.com/gpu: "1"
+              cpu: 16000m
+              memory: 50Gi
+          # Make the container harder to break out of or exploit
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1234
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /var/lib/fahclient
+              name: fahclient
+      # We make an emptyDir to mount on the work directory /var/lib/fahclient
+      # so we can make the rest of the container's root filesystem read-only
+      volumes:
+        - name: fahclient
+          emptyDir: {}
+        - name: fah-gpu-cpu-config
+          secret:
+            secretName: foldingathome-config
+      initContainers:
+        - name: copy-config
+          imagePullPolicy: Always
+          image: "richstokes20/fah-covid:latest"
+          command:
+            - "sh"
+            - "-c"
+            - "cp /etc/fahclient/config.xml /var/lib/fahclient/config.xml"
+            # Use following lines if using ConfigMap config.xml
+            # - "cp"
+            # - "/etc/fahclient-config/config.xml"
+            # - "/var/lib/fahclient/config.xml"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1234
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          volumeMounts:
+            - mountPath: /var/lib/fahclient
+              name: fahclient
+            # Uncomment if using ConfigMap config.xml
+            # - name: fah-gpu-cpu-config
+            #   mountPath: /etc/fahclient-config
+      # priorityClassName: low-priority-class
