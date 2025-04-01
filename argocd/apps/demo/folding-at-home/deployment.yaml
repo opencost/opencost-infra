@@ -76,8 +76,6 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/fahclient
               name: fahclient
-            - mountPath: /etc/fahclient
-              name: fah-gpu-cpu-config
       # We make an emptyDir to mount on the work directory /var/lib/fahclient
       # so we can make the rest of the container's root filesystem read-only
       volumes:
@@ -107,6 +105,6 @@ spec:
             - mountPath: /var/lib/fahclient
               name: fahclient
             # Uncomment if using ConfigMap config.xml
-            # - name: fah-gpu-cpu-config
-            #   mountPath: /etc/fahclient-config
+            - name: fah-gpu-cpu-config
+              mountPath: /etc/fahclient-config
       # priorityClassName: low-priority-class
