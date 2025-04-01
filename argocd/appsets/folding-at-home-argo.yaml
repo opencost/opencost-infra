@@ -10,7 +10,7 @@ spec:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: main
       files:
-      - path: "argocd/apps/*/folding-at-home/values.yaml"
+      - path: "argocd/apps/*/folding-at-home/deployment.yaml"
   template:
     metadata:
       name: 'folding-at-home-{{ index .path.segments 2 }}'
