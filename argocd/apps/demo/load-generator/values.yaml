@@ -4,3 +4,11 @@ k6:
   rps: 5
   maxVUs: 5
   VUs: 2
+
+resources:
+  requests:
+    cpu: "4"
+    memory: "4Gi"
+  limits:
+    cpu: "4"
+    memory: "4Gi"

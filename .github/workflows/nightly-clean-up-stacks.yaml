@@ -1,0 +1,68 @@
+name: Nightly Integration Test Stack Clean Up
+on:
+    schedule:
+        - cron: "0 4 * * *" # run every night at 4 AM UTC
+
+jobs:
+    clean-up-stacks:
+        runs-on: ubuntu-latest
+        steps:
+            # Setup OCI CLI
+            - name: Install OCI CLI
+              run: |
+                curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+                echo "$HOME/bin" >> $GITHUB_PATH
+
+            - name: Configure OCI CLI
+              run: |
+                mkdir -p ~/.oci
+                echo "${{ secrets.OCI_KEY }}" > ~/.oci/oci_api_key.pem
+                chmod 600 ~/.oci/oci_api_key.pem
+                cat > ~/.oci/config << EOF
+                [DEFAULT]
+                user=${{ secrets.OCI_USER }}
+                fingerprint=${{ secrets.OCI_FINGERPRINT }}
+                tenancy=${{ secrets.OCI_TENANCY }}
+                region=${{ secrets.OCI_REGION }}
+                key_file=~/.oci/oci_api_key.pem
+                EOF
+                oci setup repair-file-permissions --file /home/runner/.oci/config 
+
+            - name: Get OKE kubeconfig
+              run: |
+                oci ce cluster create-kubeconfig \
+                  --cluster-id ${{ secrets.OCI_CLUSTER_ID }} \
+                  --file $HOME/.kube/config \
+                  --region ${{ secrets.OCI_REGION }} \
+                  --token-version 2.0.0
+
+            - id: setup-kubectl
+              uses: azure/setup-kubectl@v4
+            - name: delete namespaces and helm installs
+              run: |
+                    echo "current namespaces:"
+                    kubectl get ns -o name
+                    echo "--------------------------------"
+                    allowlist="argo cert-manager default folding-at-home gpu-operator ingress-nginx kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
+                    namespaces=$(kubectl get ns -o name | sed 's/namespace\///g')
+              
+                    for ns in ${namespaces}; do
+                    
+                        isallowed=false
+                        for allowed in ${allowlist}; do
+                            
+                            if [[ "${ns}" == "${allowed}" ]]; then
+                                isallowed=true
+                            fi
+                        done
+    
+                        if [[ "${isallowed}" == "false" ]]; then
+                            echo "deleting namespace ${ns}"
+                            releases=$(helm ls --namespace ${ns} |  awk '{print $1}' | tail -n +2)
+                            for release in ${releases}; do
+                                helm uninstall ${release} --namespace ${ns}
+                            done
+                            sleep 5
+                            kubectl delete ns ${ns}
+                        fi
+                    done

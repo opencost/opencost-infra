@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: cluster-autoscaler
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: cdp/kcm-3983
+      files:
+      - path: "argocd/apps/*/cluster-autoscaler/values.yaml"
+      - path: "argocd/apps/*/cluster-autoscaler/secrets.yaml"
+  template:
+    metadata:
+      name: 'cluster-autoscaler-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://kubernetes.github.io/autoscaler
+          targetRevision: 9.46.6
+          chart: cluster-autoscaler
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/cluster-autoscaler/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: cdp/kcm-3983
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: kube-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true 
