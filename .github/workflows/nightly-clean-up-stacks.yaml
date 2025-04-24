@@ -29,6 +29,7 @@ jobs:
                 region=${{ secrets.OCI_REGION }}
                 key_file=~/.oci/oci_api_key.pem
                 EOF
+                oci setup repair-file-permissions --file /home/runner/.oci/config 
 
             - name: Get OKE kubeconfig
               run: |
@@ -42,6 +43,9 @@ jobs:
               uses: azure/setup-kubectl@v4
             - name: delete namespaces and helm installs
               run: |
+                    echo "current namespaces:"
+                    kubectl get ns -o name
+                    echo "--------------------------------"
                     allowlist="argo cert-manager default folding-at-home gpu-operator ingress-nginx kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
                     namespaces=$(kubectl get ns -o name | sed 's/namespace\///g')
               
