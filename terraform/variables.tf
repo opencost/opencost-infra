@@ -49,6 +49,9 @@ variable "nodepools" {
       ocpus            = 2,
       memory           = 32,
       size             = 2,
+      min_size         = 2,
+      max_size         = 10,
+      autoscale        = true,
       boot_volume_size = 150,
     }
   }
