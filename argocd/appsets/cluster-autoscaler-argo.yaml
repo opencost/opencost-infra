@@ -11,6 +11,7 @@ spec:
       revision: main
       files:
       - path: "argocd/apps/*/cluster-autoscaler/values.yaml"
+      - path: "argocd/apps/*/cluster-autoscaler/secrets.yaml"
   template:
     metadata:
       name: 'cluster-autoscaler-{{ index .path.segments 2 }}'
