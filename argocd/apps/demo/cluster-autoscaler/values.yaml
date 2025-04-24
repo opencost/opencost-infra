@@ -29,5 +29,26 @@ extraVolumeMounts:
     mountPath: /etc/oci
     readOnly: true
 
+initContainers:
+  - name: create-oci-config
+    image: busybox
+    command:
+      - sh
+      - -c
+      - |
+        cat <<EOF > /etc/oci/config
+        [DEFAULT]
+        user=$(cat /etc/oci/user)
+        fingerprint=$(cat /etc/oci/fingerprint)
+        key_file=/etc/oci/key.pem
+        tenancy=$(cat /etc/oci/tenancy)
+        region=us-ashburn-1
+        compartment=$(cat /etc/oci/compartment)
+        EOF
+    volumeMounts:
+      - name: oci-credentials
+        mountPath: /etc/oci
+        readOnly: true
+
 extraArgs:
   cloud-config: /etc/oci/config
