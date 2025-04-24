@@ -8,7 +8,7 @@ spec:
   generators:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
-      revision: main
+      revision: cdp/kcm-3983
       files:
       - path: "argocd/apps/*/cluster-autoscaler/values.yaml"
       - path: "argocd/apps/*/cluster-autoscaler/secrets.yaml"
@@ -27,7 +27,7 @@ spec:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/cluster-autoscaler/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: main
+          targetRevision: cdp/kcm-3983
           ref: values
       destination:
         server: https://kubernetes.default.svc
