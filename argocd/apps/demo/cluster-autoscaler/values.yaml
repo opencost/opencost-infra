@@ -1,4 +1,7 @@
 autoDiscovery:
   clusterName: opencost
 
-cloudProvider: oci 
+cloudProvider: oci
+
+oci:
+  region: us-ashburn-1
