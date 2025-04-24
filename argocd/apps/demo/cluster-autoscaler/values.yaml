@@ -34,3 +34,5 @@ env:
 extraEnv:
   - name: OCI_SDK_APPEND_USER_AGENT
     value: "oci-oke-cluster-autoscaler"
+  - name: OCI_USE_INSTANCE_PRINCIPAL
+    value: "false"
