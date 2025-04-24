@@ -35,9 +35,9 @@ variable "fingerprint" {
 }
 
 variable "image_id" {
-  description = ""
-  type = string
-  default = "ocid1.image.oc1.iad.aaaaaaaauekp2xtllqoidhftbjbt2nifzeihrfxwn7pqjce2nrupiqjs74lq"
+  description = "The OCID of the image to use for the nodes"
+  type        = string
+  default     = "ocid1.image.oc1.iad.aaaaaaaauekp2xtllqoidhftbjbt2nifzeihrfxwn7pqjce2nrupiqjs74lq"
 }
 
 variable "nodepools" {
@@ -45,25 +45,26 @@ variable "nodepools" {
   description = "Node pools for all clusters"
   default = {
     np2 = {
-      shape            = "VM.Optimized3.Flex"
-      ocpus            = 2,
-      memory           = 32,
-      size             = 2,
-      min_size         = 2,
-      max_size         = 10,
-      autoscale        = true,
-      boot_volume_size = 150,
+      shape                     = "VM.Optimized3.Flex"
+      ocpus                     = 2,
+      memory                    = 32,
+      size                      = 2,
+      min_size                  = 1,
+      max_size                  = 10,
+      autoscale                 = true,
+      ignore_initial_pool_size  = true,
+      boot_volume_size          = 150,
     }
   }
 }
 
 variable "gpu_node_shape" {
-  type = string
+  type    = string
   default = "VM.GPU2.1"
 }
 
 variable "gpu_node_pool_name" {
-  type = string
+  type    = string
   default = "np1"
 }
 
