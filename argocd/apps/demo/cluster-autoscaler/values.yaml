@@ -48,7 +48,6 @@ initContainers:
     volumeMounts:
       - name: oci-credentials
         mountPath: /etc/oci
-        readOnly: true
 
 extraArgs:
   cloud-config: /etc/oci/config
