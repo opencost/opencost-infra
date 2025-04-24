@@ -10,6 +10,17 @@ extraVolumes:
   - name: oci-credentials
     secret:
       secretName: cluster-autoscaler-oci-credentials
+      items:
+        - key: TENANCY_ID
+          path: tenancy
+        - key: USER_ID
+          path: user
+        - key: FINGERPRINT
+          path: fingerprint
+        - key: PRIVATE_KEY
+          path: key.pem
+        - key: COMPARTMENT_ID
+          path: compartment
 
 extraVolumeMounts:
   - name: oci-credentials
