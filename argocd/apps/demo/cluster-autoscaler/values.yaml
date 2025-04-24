@@ -5,3 +5,17 @@ cloudProvider: oci
 
 oci:
   region: us-ashburn-1
+
+extraVolumes:
+  - name: oci-credentials
+    secret:
+      secretName: cluster-autoscaler-oci-credentials
+
+extraVolumeMounts:
+  - name: oci-credentials
+    mountPath: /etc/oci
+    readOnly: true
+
+extraEnv:
+  - name: OCI_CONFIG_FILE
+    value: /etc/oci/config
