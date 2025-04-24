@@ -2,9 +2,6 @@ name: Nightly Integration Test Stack Clean Up
 on:
     schedule:
         - cron: "0 4 * * *" # run every night at 4 AM UTC
-    pull_request:
-        branches:
-            - main
 
 jobs:
     clean-up-stacks:
