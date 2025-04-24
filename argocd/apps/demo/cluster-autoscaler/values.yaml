@@ -16,6 +16,6 @@ extraVolumeMounts:
     mountPath: /etc/oci
     readOnly: true
 
-extraEnv:
+env:
   - name: OCI_CONFIG_FILE
     value: /etc/oci/config
