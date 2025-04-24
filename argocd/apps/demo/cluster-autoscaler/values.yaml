@@ -5,6 +5,8 @@ cloudProvider: oci
 
 oci:
   region: us-ashburn-1
+  useInstancePrincipal: false
+  configFile: /etc/oci/config
 
 extraVolumes:
   - name: oci-credentials
@@ -27,12 +29,6 @@ extraVolumeMounts:
     mountPath: /etc/oci
     readOnly: true
 
-env:
-  - name: OCI_CONFIG_FILE
-    value: /etc/oci/config
-
-extraEnv:
-  - name: OCI_SDK_APPEND_USER_AGENT
-    value: "oci-oke-cluster-autoscaler"
-  - name: OCI_USE_INSTANCE_PRINCIPAL
-    value: "false"
+extraArgs:
+  cloud-config: /etc/oci/config
+  use-instance-principal: "false"
