@@ -1,0 +1,4 @@
+autoDiscovery:
+  clusterName: opencost
+
+cloudProvider: oci 
