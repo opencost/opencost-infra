@@ -19,3 +19,4 @@ extraVolumeMounts:
 extraEnv:
   - name: OCI_CONFIG_FILE
     value: /etc/oci/config
+

@@ -1,0 +1,62 @@
+name: Test Stack
+on: 
+    workflow_call:
+      inputs:
+        namespace:
+          description: 'namespace to test'
+          type: string
+          required: true
+        target_branch:
+          description: 'branch to test'
+          type: string
+          required: false
+          default: main
+      outputs:
+        passed:
+           description: "true if tests passed, false otherwise"
+           value: ${{ jobs.test-stack.outputs.passed }}
+jobs:
+    test-stack:
+      runs-on: ubuntu-latest
+      outputs:
+        testsFailed: ${{ steps.verify.outputs.didfail }}
+        passed: ${{ steps.verify.outputs.didfail == 'false' }}
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v4
+          with:
+            repository: 'opencost/opencost-integration-tests'
+            fetch-depth: 0
+            submodules: recursive
+        - name: checkout target branch
+          run: |
+            git checkout ${{ inputs.target_branch }} || true
+        
+        - id: run-tests
+          name: run tests
+          env:
+            BATS_TEST_RETRIES: 2
+          run: |
+               export OPENCOST_URL='http://${{ inputs.namespace }}.infra.opencost.io/model'
+               ./test/bats/bin/bats -T --no-parallelize-within-files --jobs 4 -r test/integration | tee results.txt
+        - id: verify
+          name: verify test results
+          run: |
+            cat results.txt
+            if grep -q "FAIL\|not ok" results.txt; then
+              echo "didfail=true"
+              echo "didfail=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "didfail=false"
+              echo "didfail=false" >> "$GITHUB_OUTPUT"
+            fi
+        - name: upload test results
+          uses: actions/upload-artifact@v4
+          with:
+            retention-days: 1
+            name: test-results-${{ github.run_number }}
+            path: results.txt
+            overwrite: true
+        - name: Fail if tests failed
+          if: always() &&  ( failure() || steps.verify.outputs.didfail == 'true')
+          run: exit 1  
