@@ -36,8 +36,8 @@ extraVolumeMounts:
     mountPath: /etc/oci/config
     subPath: config
 
-extraArgs:
-  cloud-config: /etc/oci/config
+# extraArgs:
+#   cloud-config: /etc/oci/config
 
 env:
   - name: OCI_USER_ID
