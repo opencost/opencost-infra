@@ -11,13 +11,13 @@ extraVolumes:
     secret:
       secretName: cluster-autoscaler-oci-credentials
       items:
-        - key: user
+        - key: USER_ID
           path: user
-        - key: fingerprint
+        - key: FINGERPRINT
           path: fingerprint
-        - key: tenancy
+        - key: TENANCY_ID
           path: tenancy
-        - key: key
+        - key: PRIVATE_KEY
           path: key.pem
   - name: oci-config
     configMap:

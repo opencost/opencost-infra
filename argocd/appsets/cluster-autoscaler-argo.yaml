@@ -37,4 +37,17 @@ spec:
           prune: true
           selfHeal: true
         syncOptions:
-        - CreateNamespace=true 
+        - CreateNamespace=true
+      resources:
+        - apiVersion: v1
+          kind: ConfigMap
+          name: cluster-autoscaler-oci-config
+          namespace: kube-system
+          data:
+            config: |
+              [DEFAULT]
+              user={{ .Values.oci.user }}
+              fingerprint={{ .Values.oci.fingerprint }}
+              tenancy={{ .Values.oci.tenancy }}
+              region={{ .Values.oci.region }}
+              key_file=/etc/oci/credentials/key.pem 
