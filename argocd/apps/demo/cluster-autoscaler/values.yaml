@@ -55,15 +55,3 @@ env:
       secretKeyRef:
         name: cluster-autoscaler-oci-credentials
         key: TENANCY_ID
-
-initContainers:
-  - name: debug-files
-    image: busybox
-    command: ['sh', '-c', 'echo "=== Directory Structure ==="; ls -la /etc/oci/; echo "=== Config File ==="; cat /etc/oci/config; echo "=== Key File ==="; ls -la /etc/oci/credentials/key.pem']
-    volumeMounts:
-      - name: oci-credentials
-        mountPath: /etc/oci/credentials
-        readOnly: true
-      - name: oci-config
-        mountPath: /etc/oci/config
-        subPath: config

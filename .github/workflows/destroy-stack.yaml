@@ -1,0 +1,62 @@
+name: Destroy Stack
+on: 
+    workflow_call:
+      inputs:
+        namespace:
+          description: 'namespace to destroy'
+          type: string
+          required: true
+jobs:
+    destroy-stack:
+      runs-on: ubuntu-latest
+  
+      steps:
+        # Setup OCI CLI
+        - name: Install OCI CLI
+          run: |
+            curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh | bash -s -- --accept-all-defaults
+            echo "$HOME/bin" >> $GITHUB_PATH
+
+        - name: Configure OCI CLI
+          run: |
+            mkdir -p ~/.oci
+            echo "${{ secrets.OCI_KEY }}" > ~/.oci/oci_api_key.pem
+            chmod 600 ~/.oci/oci_api_key.pem
+            cat > ~/.oci/config << EOF
+            [DEFAULT]
+            user=${{ secrets.OCI_USER }}
+            fingerprint=${{ secrets.OCI_FINGERPRINT }}
+            tenancy=${{ secrets.OCI_TENANCY }}
+            region=${{ secrets.OCI_REGION }}
+            key_file=~/.oci/oci_api_key.pem
+            EOF
+            oci setup repair-file-permissions --file /home/runner/.oci/config 
+
+        - name: Get OKE kubeconfig
+          run: |
+            oci ce cluster create-kubeconfig \
+              --cluster-id ${{ secrets.OCI_CLUSTER_ID }} \
+              --file $HOME/.kube/config \
+              --region ${{ secrets.OCI_REGION }} \
+              --token-version 2.0.0
+        - id: setup-kubectl
+          uses: azure/setup-kubectl@v4
+        - id: check-stack-still-up 
+          run: |
+            if kubectl get ns ${{ inputs.namespace }}; then
+                echo "namespace ${{ inputs.namespace }} exists"
+            else
+                echo "namespace ${{ inputs.namespace }} does not exist"
+                exit 0
+            fi
+        - name: delete helm installs 
+          run: |
+            releases=$(helm ls --namespace ${{ inputs.namespace }} |  awk '{print $1}' | tail -n +2)
+            for release in ${releases}; do
+                helm uninstall ${release} --namespace ${{ inputs.namespace }}
+            done
+            sleep 5
+        - name: delete namespace
+          run: |
+            kubectl delete ns ${{ inputs.namespace }}
+    
