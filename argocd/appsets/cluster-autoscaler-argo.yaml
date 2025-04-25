@@ -45,9 +45,7 @@ spec:
           namespace: kube-system
           data:
             config: |
-              [DEFAULT]
-              user={{ .Values.oci.user }}
-              fingerprint={{ .Values.oci.fingerprint }}
-              tenancy={{ .Values.oci.tenancy }}
-              region={{ .Values.oci.region }}
-              key_file=/etc/oci/credentials/key.pem 
+              [Global]
+              compartment-id=$(cat /etc/oci/credentials/tenancy)
+              region=us-ashburn-1
+              use-instance-principals=false 

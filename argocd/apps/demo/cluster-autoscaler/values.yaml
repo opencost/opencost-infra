@@ -22,6 +22,9 @@ extraVolumes:
   - name: oci-config
     configMap:
       name: cluster-autoscaler-oci-config
+      items:
+        - key: config
+          path: config
 
 extraVolumeMounts:
   - name: oci-credentials
@@ -33,3 +36,4 @@ extraVolumeMounts:
 
 extraArgs:
   cloud-config: /etc/oci/config
+  use-instance-principal: false
