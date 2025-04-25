@@ -6,9 +6,9 @@ metadata:
 data:
   config: |
     [DEFAULT]
-    user={{ .Files.Get "/etc/oci/credentials/user" }}
-    fingerprint={{ .Files.Get "/etc/oci/credentials/fingerprint" }}
-    tenancy={{ .Files.Get "/etc/oci/credentials/tenancy" }}
-    region={{ .Values.oci.region }}
+    user=${OCI_USER_ID}
+    fingerprint=${OCI_FINGERPRINT}
+    tenancy=${OCI_TENANCY_ID}
+    region=us-ashburn-1
     key_file=/etc/oci/credentials/key.pem
  

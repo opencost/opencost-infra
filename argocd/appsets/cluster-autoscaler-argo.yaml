@@ -37,15 +37,4 @@ spec:
           prune: true
           selfHeal: true
         syncOptions:
-        - CreateNamespace=true
-      resources:
-        - apiVersion: v1
-          kind: ConfigMap
-          name: cluster-autoscaler-oci-config
-          namespace: kube-system
-          data:
-            config: |
-              [Global]
-              compartment-id=$(cat /etc/oci/credentials/tenancy)
-              region=us-ashburn-1
-              use-instance-principals=false 
+        - CreateNamespace=true 
