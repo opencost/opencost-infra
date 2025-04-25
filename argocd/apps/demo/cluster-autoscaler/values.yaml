@@ -11,21 +11,25 @@ extraVolumes:
     secret:
       secretName: cluster-autoscaler-oci-credentials
       items:
-        - key: TENANCY_ID
-          path: tenancy
-        - key: USER_ID
+        - key: user
           path: user
-        - key: FINGERPRINT
+        - key: fingerprint
           path: fingerprint
-        - key: PRIVATE_KEY
+        - key: tenancy
+          path: tenancy
+        - key: key
           path: key.pem
-        - key: COMPARTMENT_ID
-          path: compartment
+  - name: oci-config
+    configMap:
+      name: cluster-autoscaler-oci-config
 
 extraVolumeMounts:
   - name: oci-credentials
     mountPath: /etc/oci
     readOnly: true
+  - name: oci-config
+    mountPath: /etc/oci/config
+    subPath: config
 
 extraArgs:
   cloud-config: /etc/oci/config
