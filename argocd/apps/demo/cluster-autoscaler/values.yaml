@@ -25,7 +25,7 @@ extraVolumes:
 
 extraVolumeMounts:
   - name: oci-credentials
-    mountPath: /etc/oci
+    mountPath: /etc/oci/credentials
     readOnly: true
   - name: oci-config
     mountPath: /etc/oci/config
