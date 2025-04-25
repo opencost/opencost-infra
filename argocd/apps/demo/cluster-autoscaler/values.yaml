@@ -6,8 +6,26 @@ cloudProvider: oci
 oci:
   region: us-ashburn-1
 
-extraEnv:
-  - name: OCI_USE_INSTANCE_PRINCIPAL
-    value: "true"
-  - name: OCI_REGION
-    value: "us-ashburn-1"
+extraVolumes:
+  - name: oci-credentials
+    secret:
+      secretName: cluster-autoscaler-oci-credentials
+      items:
+        - key: TENANCY_ID
+          path: tenancy
+        - key: USER_ID
+          path: user
+        - key: FINGERPRINT
+          path: fingerprint
+        - key: PRIVATE_KEY
+          path: key.pem
+        - key: COMPARTMENT_ID
+          path: compartment
+
+extraVolumeMounts:
+  - name: oci-credentials
+    mountPath: /etc/oci
+    readOnly: true
+
+extraArgs:
+  cloud-config: /etc/oci/config
