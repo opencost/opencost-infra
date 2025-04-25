@@ -28,7 +28,8 @@ extraVolumes:
 
 extraVolumeMounts:
   - name: oci-credentials
-    mountPath: /etc/oci/credentials
+    subPath: PRIVATE_KEY
+    mountPath: key.pem
     readOnly: true
   - name: oci-config
     mountPath: /etc/oci/config
