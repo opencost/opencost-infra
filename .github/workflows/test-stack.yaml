@@ -50,7 +50,7 @@ jobs:
                while [ $attempt -le $max_attempts ]; do
                  echo "Attempt $attempt/$max_attempts: Checking if OpenCost API is ready..."
                  
-                 http_code=$(curl -L -s -o /dev/null -w "%{http_code}" $OPENCOST_URL/assets)
+                 http_code=$(curl -L -s -o /dev/null -w "%{http_code}" $OPENCOST_URL/assets?window=10m)
                  
                  if [ "$http_code" = "200" ]; then
                    echo "OpenCost API is ready! Received HTTP 200 response."
