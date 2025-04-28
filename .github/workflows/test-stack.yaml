@@ -38,8 +38,7 @@ jobs:
             BATS_TEST_RETRIES: 2
           run: |
 
-
-               export OPENCOST_URL='http://${{ inputs.namespace }}.infra.opencost.io/model'
+               export OPENCOST_URL='http://${{ inputs.namespace }}.infra.opencost.io'
                # Wait for OpenCost API to be ready before running tests
                echo "Waiting for OpenCost API to be available at $OPENCOST_URL..."
                
