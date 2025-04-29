@@ -10,6 +10,13 @@ alertmanager:
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 50Gi
     additionalScrapeConfigs:
       - job_name: opencost
         honor_labels: true
