@@ -48,11 +48,7 @@ variable "nodepools" {
       shape                     = "VM.Optimized3.Flex"
       ocpus                     = 2,
       memory                    = 32,
-      size                      = 2,
-      min_size                  = 1,
-      max_size                  = 10,
-      autoscale                 = true,
-      ignore_initial_pool_size  = true,
+      size                      = 5,
       boot_volume_size          = 150,
     }
   }
