@@ -37,7 +37,37 @@ jobs:
           env:
             BATS_TEST_RETRIES: 2
           run: |
+
+
                export OPENCOST_URL='http://${{ inputs.namespace }}.infra.opencost.io/model'
+               # Wait for OpenCost API to be ready before running tests
+               echo "Waiting for OpenCost API to be available at $OPENCOST_URL..."
+               
+               max_attempts=8
+               attempt=1
+               wait_seconds=10
+               
+               while [ $attempt -le $max_attempts ]; do
+                 echo "Attempt $attempt/$max_attempts: Checking if OpenCost API is ready..."
+                 
+                 http_code=$(curl -L -s -o /dev/null -w "%{http_code}" $OPENCOST_URL/assets?window=10m)
+                 
+                 if [ "$http_code" = "200" ]; then
+                   echo "OpenCost API is ready! Received HTTP 200 response."
+                   break
+                 else
+                   echo "OpenCost API returned HTTP code $http_code, not ready yet. Waiting $wait_seconds seconds..."
+                   sleep $wait_seconds
+                   attempt=$((attempt + 1))
+                 fi
+                 
+                 if [ $attempt -gt $max_attempts ]; then
+                   echo "Error: OpenCost API did not become available after $(($max_attempts * $wait_seconds)) seconds."
+                   exit 1
+                 fi
+               done
+               
+               echo "Proceeding with integration tests..."
                ./test/bats/bin/bats -T --no-parallelize-within-files --jobs 4 -r test/integration | tee results.txt
         - id: verify
           name: verify test results
