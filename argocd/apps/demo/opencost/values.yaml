@@ -21,4 +21,4 @@ opencost:
       port: 9090
   exporter:
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-43b8dd4
+      fullImageName: ghcr.io/opencost/opencost:develop-a3d3cdb

@@ -163,7 +163,7 @@ jobs:
                       - /
             prometheus:
               internal:
-                serviceName: prometheus-kube-prometheus-prometheus.prometheus-system.svc.cluster.local
+                serviceName: prometheus-kube-prometheus-prometheus
                 port: 9090
           ' > /tmp/values.yaml
           
