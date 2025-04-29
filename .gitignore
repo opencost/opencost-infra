@@ -4,3 +4,4 @@ kubeconfig
 *.tfvars
 .terraform.lock.hcl
 .terraform
+config.ini
