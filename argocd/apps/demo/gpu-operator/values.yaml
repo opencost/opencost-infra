@@ -1,3 +1,7 @@
 cdi:
   enabled: true
   default: true
+
+dcgmExporter:
+  serviceMonitor:
+    enabled: true
