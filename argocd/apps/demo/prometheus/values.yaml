@@ -29,15 +29,3 @@ prometheus:
           - opencost-demo.opencost
           type: 'A'
           port: 9003
-
-    additionalServiceMonitors:
-      - name: "dcgm-exporter"
-        namespaceSelector:
-          matchNames:
-            - dcgm-exporter
-        selector:
-          matchLabels:
-            app: dcgm-exporter
-        endpoints:
-          - port: metrics
-            interval: 30s
