@@ -29,3 +29,11 @@ prometheus:
           - opencost-demo.opencost
           type: 'A'
           port: 9003
+      - job_name: opencost-dcgm-exporter
+        honor_labels: true
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_app, __meta_kubernetes_pod_label_app_kubernetes_io_component, __meta_kubernetes_pod_label_app_kubernetes_io_name]
+            action: keep
+            regex: (?i)(.*dcgm-exporter.*|.*dcgm-exporter.*|.*dcgm-exporter.*)
