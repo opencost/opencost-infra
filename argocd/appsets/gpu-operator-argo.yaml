@@ -21,7 +21,7 @@ spec:
       sources:
         - repoURL: https://helm.ngc.nvidia.com/nvidia
           chart:  gpu-operator
-          targetRevision: 25.3.0
+          targetRevision: 24.9.2
           helm:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/gpu-operator/values.yaml'
