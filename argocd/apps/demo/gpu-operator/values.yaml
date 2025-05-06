@@ -1,7 +1,8 @@
 cdi:
   enabled: true
   default: true
-
+operator:
+    defaultRuntime: crio
 dcgmExporter:
   serviceMonitor:
     enabled: true
