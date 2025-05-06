@@ -56,7 +56,7 @@ variable "nodepools" {
 
 variable "gpu_node_shape" {
   type    = string
-  default = "VM.GPU2.1"
+  default = "VM.GPU.A10.1"
 }
 
 variable "gpu_node_pool_name" {
