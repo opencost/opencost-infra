@@ -5,3 +5,6 @@ cdi:
 dcgmExporter:
   serviceMonitor:
     enabled: true
+
+customMetrics:
+  - DCGM_FI_PROF_GR_ENGINE_ACTIVE
