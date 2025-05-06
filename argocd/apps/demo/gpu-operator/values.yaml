@@ -5,4 +5,4 @@ operator:
     defaultRuntime: crio
 dcgmExporter:
   serviceMonitor:
-    enabled: true
+    enabled: false
