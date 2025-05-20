@@ -37,3 +37,21 @@ prometheus:
           - source_labels: [__meta_kubernetes_pod_label_app, __meta_kubernetes_pod_label_app_kubernetes_io_component, __meta_kubernetes_pod_label_app_kubernetes_io_name]
             action: keep
             regex: (?i)(.*dcgm-exporter.*|.*dcgm-exporter.*|.*dcgm-exporter.*)
+
+hosts:
+  - url: demo-prometheus.infra.opencost.io
+    paths:
+      - path: /
+        backend:
+          serviceName: prometheus-kube-prometheus-prometheus
+          servicePort: 8080
+tls:
+  - hosts:
+      - demo-prometheus.infra.opencost.io
+    secretName: testsecret-tls
+
+ingressClassName: "nginx"
+annotations:
+  kubernetes.io/ingress.class: nginx
+  kubernetes.io/tls-acme: "true"
+  cert-manager.io/cluster-issuer: "letsencrypt-demo"
