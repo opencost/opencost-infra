@@ -43,6 +43,7 @@ hosts:
   - url: demo-prometheus.infra.opencost.io
     paths:
       - path: /
+        pathType: Prefix
         backend:
           service:
             name: prometheus-kube-prometheus-prometheus
