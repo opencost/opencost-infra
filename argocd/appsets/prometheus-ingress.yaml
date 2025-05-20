@@ -13,7 +13,7 @@ spec:
       - path: "argocd/apps/*/prometheus/values.yaml"
   template:
     metadata:
-      name: 'prometheus'
+      name: 'prometheus-ingress'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
     spec:
