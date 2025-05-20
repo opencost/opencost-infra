@@ -44,8 +44,9 @@ hosts:
     paths:
       - path: /
         backend:
-          name: prometheus-kube-prometheus-prometheus
-          port: 8080
+          service:
+            name: prometheus-kube-prometheus-prometheus
+            port: 8080
 tls:
   - hosts:
       - demo-prometheus.infra.opencost.io
