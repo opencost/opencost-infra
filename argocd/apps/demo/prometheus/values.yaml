@@ -38,6 +38,7 @@ prometheus:
             action: keep
             regex: (?i)(.*dcgm-exporter.*|.*dcgm-exporter.*|.*dcgm-exporter.*)
 
+# for the prometheus ingress helm chart
 hosts:
   - url: demo-prometheus.infra.opencost.io
     paths:
@@ -49,9 +50,9 @@ tls:
   - hosts:
       - demo-prometheus.infra.opencost.io
     secretName: testsecret-tls
-
 ingressClassName: "nginx"
 annotations:
   kubernetes.io/ingress.class: nginx
   kubernetes.io/tls-acme: "true"
   cert-manager.io/cluster-issuer: "letsencrypt-demo"
+apiVersion: v1
