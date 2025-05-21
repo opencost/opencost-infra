@@ -12,7 +12,7 @@ prometheus:
     serviceMonitorSelectorNilUsesHelmValues: false
     resources:
       requests:
-        cpu: 3500m
+        cpu: 3400m
         memory: 4Gi
       limits:
         memory: 25Gi
