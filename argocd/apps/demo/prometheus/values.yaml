@@ -10,6 +10,12 @@ alertmanager:
 prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 3500m
+        memory: 4Gi
+      limits:
+        memory: 25Gi
     storageSpec:
       volumeClaimTemplate:
         spec:
