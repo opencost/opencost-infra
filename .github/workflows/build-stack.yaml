@@ -178,25 +178,24 @@ jobs:
           #   containerOpts+=" --set opencost.ui.image.fullImageName=ghcr.io/opencost/opencost-ui:develop-latest"
           # fi
               
-          echo '
+          echo "
           opencost:
             ui:
               ingress:
                 enabled: true
-                ingressClassName: "nginx"
+                ingressClassName: \"nginx\"
                 annotations:
                   kubernetes.io/ingress.class: nginx
                 hosts:
-                  - host: $TARGET_NAMESPACE.infra.opencost.io
+                  - host: ${TARGET_NAMESPACE}.infra.opencost.io
                     paths:
                       - /
             prometheus:
-              enabled: $PROMETHEUS
+              enabled: ${PROMETHEUS}
               internal:
                   serviceName: prometheus-kube-prometheus-prometheus
                   port: 9090
-              fi
-          ' > /tmp/values.yaml
+          " > /tmp/values.yaml
           
           
           echo "values.yaml: $(cat /tmp/values.yaml)"
