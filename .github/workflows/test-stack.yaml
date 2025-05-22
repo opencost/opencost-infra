@@ -11,6 +11,16 @@ on:
           type: string
           required: false
           default: main
+        comparison:
+          description: 'run comparison tests'
+          type: boolean
+          required: false
+          default: false
+        comparison_namespace:
+          description: 'namespace to run comparison tests in'
+          type: string
+          required: false
+          default: ""
       outputs:
         passed:
            description: "true if tests passed, false otherwise"
@@ -36,10 +46,13 @@ jobs:
           name: run tests
           env:
             BATS_TEST_RETRIES: 2
+            COMPARISON: ${{ inputs.comparison }}
+            COMPARISON_NAMESPACE: ${{ inputs.comparison_namespace }}
+            NAMESPACE: ${{ inputs.namespace }}
           run: |
 
-
-               export OPENCOST_URL='http://${{ inputs.namespace }}.infra.opencost.io/model'
+               export OPENCOST_URL="http://$NAMESPACE.infra.opencost.io/model"
+               export COMPARISON_OPENCOST_URL="http://$COMPARISON_NAMESPACE.infra.opencost.io/model"
                # Wait for OpenCost API to be ready before running tests
                echo "Waiting for OpenCost API to be available at $OPENCOST_URL..."
                
@@ -67,8 +80,14 @@ jobs:
                  fi
                done
                
-               echo "Proceeding with integration tests..."
-               ./test/bats/bin/bats -T --no-parallelize-within-files --jobs 4 -r test/integration | tee results.txt
+               echo "Proceeding with tests..."
+               if [ "$COMPARISON" = "true" ]; then
+                echo "Running comparison tests..."
+                ./test/bats/bin/bats -T --no-parallelize-within-files --jobs 4 -r test/comparison | tee results.txt
+               else
+                echo "Running integration tests..."
+                ./test/bats/bin/bats -T --no-parallelize-within-files --jobs 4 -r test/integration | tee results.txt
+               fi
         - id: verify
           name: verify test results
           run: |
