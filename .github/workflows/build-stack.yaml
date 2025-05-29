@@ -156,6 +156,7 @@ jobs:
           OC_CONTAINER_VERSION: ${{ inputs.oc-container-version }}
           OC_UI_VERSION: ${{ inputs.oc-ui-version }}
           PROMETHEUS: ${{ inputs.prometheus }}
+          PROMLESS: ${{ !inputs.prometheus }}
         run: |
           set -e
           versionOpts=""
@@ -180,6 +181,9 @@ jobs:
               
           echo "
           opencost:
+            exporter:
+              collectorDataSource:
+                enabled: ${PROMLESS}
             ui:
               ingress:
                 enabled: true
