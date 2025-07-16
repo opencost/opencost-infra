@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: network-costs
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: main
+      files:
+      - path: "argocd/apps/*/network-costs/values.yaml"
+  template:
+    metadata:
+      name: 'network-costs-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://kubecost.github.io/cost-analyzer
+          targetRevision: 2.8.0
+          chart: cost-analyzer
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/network-costs/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: network-costs
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true 
