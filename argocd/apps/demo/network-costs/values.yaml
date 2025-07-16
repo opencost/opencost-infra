@@ -1,0 +1,52 @@
+# Network costs configuration with ONLY network costs collection enabled
+# All other components are disabled
+global:
+  prometheus:
+    enabled: false
+  grafana:
+    enabled: false
+  gmp:
+    enabled: false
+
+# Enable network costs collection
+networkCosts:
+  enabled: true
+  imagePullPolicy: Always
+  config:
+    services:
+      # Enable all cloud providers for network costs
+      amazon-web-services: true
+      google-cloud-services: true
+      azure-cloud-services: true
+
+# Disable forecasting
+forecasting:
+  enabled: false
+
+
+# Disable Kubecost frontend
+kubecostFrontend:
+  enabled: false
+
+# Disable Kubecost model
+kubecostModel:
+  enabled: false
+
+# Disable Kubecost product configurations
+kubecostProductConfigs:
+  enabled: false
+
+# Disable Ingress
+ingress:
+  enabled: false
+
+agent: true
+
+# Disable aggregator
+kubecostAggregator:
+  deployMethod: disabled
+
+# Disable cloud cost
+kubecostModel:
+  cloudCost:
+    enabled: false 
