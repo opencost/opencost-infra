@@ -23,6 +23,8 @@ networkCosts:
 forecasting:
   enabled: false
 
+persistentVolume:
+  enabled: false
 
 # Disable Kubecost frontend
 kubecostFrontend:
