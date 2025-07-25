@@ -43,7 +43,7 @@ jobs:
                     echo "current namespaces:"
                     kubectl get ns -o name
                     echo "--------------------------------"
-                    allowlist="argo cert-manager default folding-at-home gpu-operator ingress-nginx kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
+                    allowlist="cnpg-system network-load-gen network-costs argo cert-manager default folding-at-home gpu-operator ingress-nginx kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
                     namespaces=$(kubectl get ns -o name | sed 's/namespace\///g')
               
                     for ns in ${namespaces}; do

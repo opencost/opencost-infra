@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: postgres-operator
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: main
+      files:
+      - path: "argocd/apps/*/postgres-operator/values.yaml"
+  template:
+    metadata:
+      name: 'postgres-operator-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://cloudnative-pg.github.io/charts
+          chart:  cloudnative-pg
+          targetRevision: 0.25.0
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/postgres-operator/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: cnpg-system
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
