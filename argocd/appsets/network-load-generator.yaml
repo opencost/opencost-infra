@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: network-load-generator
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: main
+      files:
+      - path: "argocd/apps/*/network-load-gen/values.yaml"
+  template:
+    metadata:
+      name: 'network-load-generator-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: oci://tccr.io/truecharts/speedtest-tracker
+          chart:  speedtest-tracker
+          targetRevision: 8.2.1
+          helm:
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/network-load-gen/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: network-load-gen
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
