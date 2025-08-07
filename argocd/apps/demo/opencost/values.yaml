@@ -20,7 +20,7 @@ opencost:
           hosts:
             - demo.infra.opencost.io
     image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-09fe99a
+      fullImageName: ghcr.io/opencost/opencost-ui:develop-61747f1
   prometheus:
     internal:
       serviceName: prometheus-kube-prometheus-prometheus
@@ -28,4 +28,3 @@ opencost:
   exporter:
     image:
       fullImageName: ghcr.io/opencost/opencost:develop-050ce5a
-      
