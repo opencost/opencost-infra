@@ -24,13 +24,13 @@ on:
       outputs:
         passed:
            description: "true if tests passed, false otherwise"
-           value: ${{ jobs.test-stack.outputs.passed }}
+           value: ${{ ! jobs.test-stack.outputs.failed }}
 jobs:
     test-stack:
       runs-on: ubuntu-latest
       outputs:
         testsFailed: ${{ steps.verify.outputs.didfail }}
-        passed: ${{ steps.verify.outputs.didfail == 'true' }}
+        failed: ${{ steps.verify.outputs.didfail }}
       steps:
         - name: Checkout repo
           uses: actions/checkout@v4
