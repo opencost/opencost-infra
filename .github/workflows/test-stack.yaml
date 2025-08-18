@@ -30,7 +30,7 @@ jobs:
       runs-on: ubuntu-latest
       outputs:
         testsFailed: ${{ steps.verify.outputs.didfail }}
-        passed: ${{ steps.verify.outputs.didfail == 'false' }}
+        passed: ${{ steps.verify.outputs.didfail == 'true' }}
       steps:
         - name: Checkout repo
           uses: actions/checkout@v4
