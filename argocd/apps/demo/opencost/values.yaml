@@ -29,5 +29,4 @@ opencost:
     image:
       fullImageName: ghcr.io/opencost/opencost:develop-f129556
     extraEnv:
-      - name: PROMETHEUS_QUERY_RESOLUTION_SECONDS
-        value: "60"
+      PROMETHEUS_QUERY_RESOLUTION_SECONDS: "60"
