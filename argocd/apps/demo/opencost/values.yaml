@@ -28,5 +28,5 @@ opencost:
   exporter:
     image:
       fullImageName: ghcr.io/opencost/opencost:develop-f129556
-    extraEnv:
-      PROMETHEUS_QUERY_RESOLUTION_SECONDS: "60"
+    prometheusDataSource:
+      queryResolutionSeconds: "60"
