@@ -27,6 +27,6 @@ opencost:
       port: 9090
   exporter:
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-f129556
+      fullImageName: ghcr.io/opencost/opencost:develop-a3c8a21
     prometheusDataSource:
       queryResolutionSeconds: "60"
