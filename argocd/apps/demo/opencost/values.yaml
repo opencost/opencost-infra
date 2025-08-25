@@ -19,14 +19,9 @@ opencost:
         - secretName: opencost-tls
           hosts:
             - demo.infra.opencost.io
-    image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-c855f42
   prometheus:
     internal:
       serviceName: prometheus-kube-prometheus-prometheus
       port: 9090
-  exporter:
-    image:
-      fullImageName: ghcr.io/opencost/opencost:develop-b86538a
     prometheusDataSource:
       queryResolutionSeconds: "60"
