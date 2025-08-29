@@ -184,8 +184,6 @@ jobs:
             exporter:
               collectorDataSource:
                 enabled: ${PROMLESS}
-              prometheusDataSource:
-                queryResolutionSeconds: "60"
             ui:
               ingress:
                 enabled: true
@@ -201,7 +199,6 @@ jobs:
               internal:
                   serviceName: prometheus-kube-prometheus-prometheus
                   port: 9090
-            
           " > /tmp/values.yaml
           
           
