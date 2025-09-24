@@ -24,7 +24,7 @@ on:
       outputs:
         passed:
            description: "true if tests passed, false otherwise"
-           value: ${{ ! jobs.test-stack.outputs.failed }}
+           value: ${{ jobs.test-stack.outputs.testsFailed == 'false' }}
 jobs:
     test-stack:
       runs-on: ubuntu-latest
