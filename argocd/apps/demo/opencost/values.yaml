@@ -30,7 +30,9 @@ opencost:
       hosts:
         - host: mcp-demo.infra.opencost.io
           paths: 
-            - /
+             - path: /
+               pathType: Prefix
+
       tls:
         - secretName: opencost-mcp-tls
           hosts:
