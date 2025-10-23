@@ -19,8 +19,6 @@ opencost:
         - secretName: opencost-tls
           hosts:
             - demo.infra.opencost.io
-    image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-47d851c
   prometheus:
     internal:
       serviceName: prometheus-kube-prometheus-prometheus
@@ -28,5 +26,3 @@ opencost:
   exporter:
     prometheusDataSource:
       queryResolutionSeconds: "60"
-    image:
-      fullImageName: ghcr.io/opencost/opencost:develop-37e08c6
