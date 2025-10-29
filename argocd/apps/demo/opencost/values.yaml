@@ -20,7 +20,7 @@ opencost:
           hosts:
             - demo.infra.opencost.io
     image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-40aab95
+      fullImageName: ghcr.io/opencost/opencost-ui:develop-86fe0dd
   mcp:
     ingress:
       enabled: true
@@ -46,4 +46,4 @@ opencost:
     prometheusDataSource:
       queryResolutionSeconds: "60"
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-111cd37
+      fullImageName: ghcr.io/opencost/opencost:develop-d13a362
