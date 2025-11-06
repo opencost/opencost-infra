@@ -20,7 +20,7 @@ opencost:
           hosts:
             - demo.infra.opencost.io
     image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-86fe0dd
+      fullImageName: ghcr.io/opencost/opencost-ui:develop-ff0f486
   mcp:
     ingress:
       enabled: true
