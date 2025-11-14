@@ -53,6 +53,7 @@ jobs:
 
                export OPENCOST_URL="http://$NAMESPACE.infra.opencost.io/model"
                export COMPARISON_OPENCOST_URL="http://$COMPARISON_NAMESPACE.infra.opencost.io/model"
+               export OPENCOST_MCP_URL="https://$NAMESPACE.infra.opencost.io"
                # Wait for OpenCost API to be ready before running tests
                echo "Waiting for OpenCost API to be available at $OPENCOST_URL..."
                
