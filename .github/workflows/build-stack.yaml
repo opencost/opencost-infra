@@ -207,6 +207,8 @@ jobs:
                   kubernetes.io/ingress.class: nginx
                 hosts:
                   - host: ${TARGET_NAMESPACE}-mcp.infra.opencost.io
+                    paths:
+                      - /
 
           " > /tmp/values.yaml
           
