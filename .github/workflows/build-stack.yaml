@@ -193,8 +193,7 @@ jobs:
                 hosts:
                   - host: ${TARGET_NAMESPACE}.infra.opencost.io
                     paths:
-                      - path: /
-                        pathType: Prefix
+                      - /
             prometheus:
               enabled: ${PROMETHEUS}
               internal:
@@ -209,7 +208,8 @@ jobs:
                 hosts:
                   - host: ${TARGET_NAMESPACE}-mcp.infra.opencost.io
                     paths:
-                      - /
+                      - path: /
+                        pathType: Prefix
 
           " > /tmp/values.yaml
           
