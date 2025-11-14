@@ -199,6 +199,15 @@ jobs:
               internal:
                   serviceName: prometheus-kube-prometheus-prometheus
                   port: 9090
+            mcp:
+              ingress:
+                enabled: true
+                ingressClassName: \"nginx\"
+                annotations:
+                  kubernetes.io/ingress.class: nginx
+                hosts:
+                  - host: ${TARGET_NAMESPACE}-mcp.infra.opencost.io
+
           " > /tmp/values.yaml
           
           
