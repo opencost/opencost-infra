@@ -3,16 +3,16 @@
 {{- end -}}
 
 {{- define "iperf3.fullname" -}}
-{{- if .Values.fullnameOverride -}}
-{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+  {{- if .Values.fullnameOverride -}}
+    {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+  {{- else -}}
+    {{- $name := default .Chart.Name .Values.nameOverride -}}
+    {{- if contains $name .Release.Name -}}
+      {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+    {{- else -}}
+      {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+    {{- end -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "iperf3.chart" -}}
@@ -34,20 +34,20 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "iperf3.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create -}}
-{{- default (include "iperf3.fullname" .) .Values.serviceAccount.name -}}
-{{- else -}}
-{{- default "default" .Values.serviceAccount.name -}}
-{{- end -}}
+  {{- if .Values.serviceAccount.create -}}
+    {{- default (include "iperf3.fullname" .) .Values.serviceAccount.name -}}
+  {{- else -}}
+    {{- default "default" .Values.serviceAccount.name -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "iperf3.validateValues" -}}
-{{- if not (has .Values.mode (list "server" "client")) }}
-{{- fail "mode must be either \"server\" or \"client\"" -}}
-{{- end -}}
-{{- if and (eq .Values.mode "client") (not .Values.client.targetHost) }}
-{{- fail "client.targetHost must be provided when mode is set to client" -}}
-{{- end -}}
+  {{- if not (has .Values.mode (list "server" "client")) }}
+    {{- fail "mode must be either \"server\" or \"client\"" -}}
+  {{- end -}}
+  {{- if and (eq .Values.mode "client") (not .Values.client.targetHost) }}
+    {{- fail "client.targetHost must be provided when mode is set to client" -}}
+  {{- end -}}
 {{- end -}}
 
 {{- define "iperf3.clientCommand" -}}
