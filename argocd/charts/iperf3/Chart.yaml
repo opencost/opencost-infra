@@ -1,0 +1,15 @@
+apiVersion: v2
+name: iperf3
+description: Helm chart for deploying iperf3 server or client workloads for network benchmarking.
+type: application
+version: 0.1.0
+appVersion: "3.16"
+keywords:
+  - iperf
+  - iperf3
+  - networking
+  - benchmarking
+home: https://github.com/opencost/opencost-infra
+maintainers:
+  - name: OpenCost
+    url: https://www.opencost.io

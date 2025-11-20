@@ -1,0 +1,38 @@
+{{- if and .Values.service.enabled (eq .Values.mode "server") }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "iperf3.fullname" . }}
+  labels:
+    {{- include "iperf3.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  {{- with .Values.service.externalIPs }}
+  externalIPs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
+  {{- end }}
+  {{- with .Values.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- if and (eq .Values.service.type "LoadBalancer") .Values.service.externalTrafficPolicy }}
+  externalTrafficPolicy: {{ .Values.service.externalTrafficPolicy }}
+  {{- end }}
+  selector:
+    {{- include "iperf3.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: iperf
+      port: {{ default .Values.server.port .Values.service.port }}
+      targetPort: {{ default .Values.server.port .Values.service.targetPort }}
+      protocol: TCP
+      {{- if and (or (eq .Values.service.type "NodePort") (eq .Values.service.type "LoadBalancer")) .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
+{{- end }}

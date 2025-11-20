@@ -1,0 +1,16 @@
+.DS_Store
+.git/
+.gitignore
+.idea/
+*.swp
+*.bak
+*.tmp
+*.orig
+*.rej
+*.log
+charts/
+Chart.lock
+packages/
+node_modules/
+vendor/
+*.iml

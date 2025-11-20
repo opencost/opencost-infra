@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: iperf-client
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/opencost/opencost-infra.git
+        revision: main
+        files:
+          - path: "argocd/apps/*/iperf-client/values.yaml"
+  template:
+    metadata:
+      name: 'iperf-client-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+    spec:
+      project: default
+      sources:
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          path: argocd/charts/iperf3
+          helm:
+            valueFiles:
+              - '$values/argocd/apps/{{ index .path.segments 2 }}/iperf-client/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: iperf-client
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
