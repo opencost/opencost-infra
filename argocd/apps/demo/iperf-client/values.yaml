@@ -6,7 +6,7 @@ service:
   enabled: false
 
 client:
-  targetHost: iperf-server-demo.iperf-server.svc.cluster.local
+  targetHost: iperf-server-demo-iperf3.iperf-server.svc.cluster.local
   targetPort: 5201
   durationSeconds: 60
   parallelStreams: 4
