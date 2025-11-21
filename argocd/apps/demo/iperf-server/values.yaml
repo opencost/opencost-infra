@@ -2,6 +2,17 @@ mode: server
 
 replicaCount: 1
 
+podLabels:
+  iperf.opencost.io/group: test-infra
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        iperf.opencost.io/group: test-infra
+
 service:
   type: ClusterIP
   port: 5201

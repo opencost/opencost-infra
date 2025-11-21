@@ -28,9 +28,9 @@ spec:
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: main
           ref: values
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: iperf-server
+        destination:
+          server: https://kubernetes.default.svc
+          namespace: 'iperf-{{ index .path.segments 2 }}'
       syncPolicy:
         automated:
           prune: true
