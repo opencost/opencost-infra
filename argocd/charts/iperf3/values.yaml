@@ -72,7 +72,7 @@ topologySpreadConstraints:
     topologyKey: topology.kubernetes.io/zone
     whenUnsatisfiable: DoNotSchedule
     matchLabelKeys:
-      - app.kubernetes.io/instance
+      - app.kubernetes.io/name
 
 priorityClassName: ""
 
