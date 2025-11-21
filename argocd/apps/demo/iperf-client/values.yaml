@@ -2,11 +2,22 @@ mode: client
 
 replicaCount: 1
 
+podLabels:
+  iperf.opencost.io/group: demo
+
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        iperf.opencost.io/group: demo
+
 service:
   enabled: false
 
 client:
-  targetHost: iperf-server-demo-iperf3.iperf-server.svc.cluster.local
+  targetHost: iperf-server-demo-iperf3.iperf-demo.svc.cluster.local
   targetPort: 5201
   durationSeconds: 60
   parallelStreams: 4
