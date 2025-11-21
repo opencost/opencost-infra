@@ -1,7 +1,7 @@
 module "oke" {
 
   source  = "oracle-terraform-modules/oke/oci"
-  version = "5.2.4" 
+  version = "5.2.4"
 
   home_region = var.region
 
@@ -18,7 +18,7 @@ module "oke" {
   vcn_name                          = var.vcn_name
 
   # bastion host
-  create_bastion        = false
+  create_bastion = false
 
   # operator host
   create_operator            = true
@@ -32,7 +32,6 @@ module "oke" {
   control_plane_is_public     = true
   control_plane_allowed_cidrs = ["0.0.0.0/0"]
   kubernetes_version          = var.kubernetes_version
-
 
   # node pools
   allow_worker_ssh_access = false
@@ -48,40 +47,46 @@ module "oke" {
   }
 }
 
+locals {
+  worker_node_user_data = base64encode(<<-EOF
+    #cloud-config
+    apt:
+      sources:
+        oke-node: {source: 'deb [trusted=yes] https://objectstorage.us-sanjose-1.oraclecloud.com/p/45eOeErEDZqPGiymXZwpeebCNb5lnwzkcQIhtVf6iOF44eet_efdePaF7T8agNYq/n/odx-oke/b/okn-repositories-private/o/prod/ubuntu-jammy/kubernetes-1.31 stable main'}
+    packages:
+    - oci-oke-node-all-1.31.1
+    runcmd:
+    - oke bootstrap
+  EOF
+  )
+
+  spot_shape_config_required = can(regex("(?i)flex", var.spot_node_shape))
+}
+
 resource "oci_containerengine_node_pool" "gpu_node_pool" {
   cluster_id         = module.oke.cluster_id
   compartment_id     = var.compartment_id
   kubernetes_version = var.kubernetes_version
-  name              = var.gpu_node_pool_name
-  node_shape        = var.gpu_node_shape
+  name               = var.gpu_node_pool_name
+  node_shape         = var.gpu_node_shape
 
   node_config_details {
     placement_configs {
       availability_domain = var.availability_domain
-      subnet_id          = module.oke.worker_subnet_id
+      subnet_id           = module.oke.worker_subnet_id
     }
-    size = 1
+    size    = 1
     nsg_ids = [module.oke.worker_nsg_id]
   }
 
   node_source_details {
-    image_id = var.image_id
+    image_id    = var.image_id
     source_type = "IMAGE"
   }
 
   # Install and configure Ubuntu worker node for GPU
   node_metadata = {
-    user_data = base64encode(<<-EOF
-      #cloud-config
-      apt:
-        sources:
-          oke-node: {source: 'deb [trusted=yes] https://objectstorage.us-sanjose-1.oraclecloud.com/p/45eOeErEDZqPGiymXZwpeebCNb5lnwzkcQIhtVf6iOF44eet_efdePaF7T8agNYq/n/odx-oke/b/okn-repositories-private/o/prod/ubuntu-jammy/kubernetes-1.31 stable main'}
-      packages:                                                       
-      - oci-oke-node-all-1.31.1
-      runcmd:
-      - oke bootstrap
-    EOF
-    )
+    user_data = local.worker_node_user_data
   }
 }
 
@@ -93,7 +98,7 @@ data "oci_containerengine_cluster_kube_config" "opencost_cluster_config" {
 # Saves the retrieved kubeconfig content to a local file named "kubeconfig"
 # This file is not committed to GitHub
 resource "local_file" "kubeconfig" {
-  content  = data.oci_containerengine_cluster_kube_config.opencost_cluster_config.content
-  filename = "${path.module}/kubeconfig"
+  content         = data.oci_containerengine_cluster_kube_config.opencost_cluster_config.content
+  filename        = "${path.module}/kubeconfig"
   file_permission = "0600"
 }

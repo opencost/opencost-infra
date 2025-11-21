@@ -1,13 +1,13 @@
 variable "region" {
-  description   = "The tenancy's home region. Use the short form in lower case e.g. phoenix."
-  type          = string
-  default       = "us-ashburn-1"
+  description = "The tenancy's home region. Use the short form in lower case e.g. phoenix."
+  type        = string
+  default     = "us-ashburn-1"
 }
 
 variable "availability_domain" {
-  description   = "The availability domain within the OCI region where resources will be deployed. avRo:US-ASHBURN-AD-2 is the only AD in Ashburn that contains the VM.GPU2.1 GPU node shape."
-  type          = string
-  default       = "avRo:US-ASHBURN-AD-2"
+  description = "The availability domain within the OCI region where resources will be deployed. avRo:US-ASHBURN-AD-2 is the only AD in Ashburn that contains the VM.GPU2.1 GPU node shape."
+  type        = string
+  default     = "avRo:US-ASHBURN-AD-2"
 }
 
 variable "tenancy_id" {
@@ -17,9 +17,9 @@ variable "tenancy_id" {
 }
 
 variable "compartment_id" {
-  description   = "The compartment id where to create all resources."
-  type          = string
-  sensitive     = true
+  description = "The compartment id where to create all resources."
+  type        = string
+  sensitive   = true
 }
 
 variable "user_id" {
@@ -45,11 +45,23 @@ variable "nodepools" {
   description = "Node pools for all clusters"
   default = {
     np2 = {
-      shape                     = "VM.Optimized3.Flex"
-      ocpus                     = 2,
-      memory                    = 32,
-      size                      = 5,
-      boot_volume_size          = 150,
+      shape            = "VM.Optimized3.Flex"
+      ocpus            = 2,
+      memory           = 32,
+      size             = 5,
+      boot_volume_size = 150,
+    },
+    np-spot = {
+      shape            = "VM.Optimized3.Flex"
+      ocpus            = 2,
+      memory           = 32,
+      size             = 2,
+      boot_volume_size = 150,
+
+      preemptible_config = {
+        enable = true
+        is_preserve_boot_volume = false
+      }
     }
   }
 }
@@ -62,6 +74,54 @@ variable "gpu_node_shape" {
 variable "gpu_node_pool_name" {
   type    = string
   default = "np1"
+}
+
+variable "spot_node_pool_name" {
+  type        = string
+  description = "Name of the spot node pool"
+  default     = "np-spot"
+}
+
+variable "spot_node_shape" {
+  type        = string
+  description = "Shape to use for spot nodes"
+  default     = "VM.Standard3.Flex"
+}
+
+variable "spot_node_ocpus" {
+  type        = number
+  description = "Number of OCPUs for spot nodes (used for Flex shapes)"
+  default     = 2
+}
+
+variable "spot_node_memory_in_gbs" {
+  type        = number
+  description = "Memory in GBs for spot nodes (used for Flex shapes)"
+  default     = 16
+}
+
+variable "spot_node_pool_size" {
+  type        = number
+  description = "Desired number of spot worker nodes"
+  default     = 2
+}
+
+variable "spot_node_boot_volume_size_gbs" {
+  type        = number
+  description = "Boot volume size for spot worker nodes"
+  default     = 150
+}
+
+variable "spot_preemption_action_type" {
+  type        = string
+  description = "OCI preemption action when spot nodes are reclaimed (e.g., TERMINATE)"
+  default     = "TERMINATE"
+}
+
+variable "spot_preserve_boot_volume" {
+  type        = bool
+  description = "Whether to preserve boot volumes for spot nodes after preemption"
+  default     = false
 }
 
 variable "vcn_name" {
@@ -96,7 +156,7 @@ variable "environment" {
 variable "argo_settings" {
   type = object({
     source_repo_url = string
-    target_revision  = string
+    target_revision = string
   })
   description = "Settings for the Argo CD installation"
 
