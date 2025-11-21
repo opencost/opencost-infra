@@ -1,0 +1,77 @@
+mode: server
+
+replicaCount: 1
+
+image:
+  repository: networkstatic/iperf3
+  tag: "3.16"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 5201
+  targetPort: 5201
+  annotations: {}
+  labels: {}
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalIPs: []
+  externalTrafficPolicy: Cluster
+  nodePort: null
+
+server:
+  port: 5201
+  intervalSeconds: 1
+  forceFlush: true
+  verbose: false
+  extraArgs: []
+  extraEnv: []
+
+client:
+  targetHost: ""
+  targetPort: 5201
+  durationSeconds: 30
+  parallelStreams: 1
+  udp: false
+  bandwidth: ""
+  reverse: false
+  omitSeconds: 0
+  waitSeconds: 30
+  runForever: true
+  json: false
+  extraArgs: []
+  extraEnv: []
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+topologySpreadConstraints: []
+
+priorityClassName: ""
+
+extraEnv: []
+extraEnvFrom: []
+extraVolumeMounts: []
+extraVolumes: []

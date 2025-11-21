@@ -1,0 +1,22 @@
+mode: server
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 5201
+  targetPort: 5201
+
+server:
+  port: 5201
+  intervalSeconds: 5
+  forceFlush: true
+  verbose: false
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

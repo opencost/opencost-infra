@@ -1,0 +1,24 @@
+mode: client
+
+replicaCount: 1
+
+service:
+  enabled: false
+
+client:
+  targetHost: iperf-server-demo-iperf3.iperf-server.svc.cluster.local
+  targetPort: 5201
+  durationSeconds: 60
+  parallelStreams: 4
+  waitSeconds: 90
+  runForever: true
+  extraArgs:
+    - --get-server-output
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

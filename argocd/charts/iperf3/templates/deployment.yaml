@@ -1,0 +1,134 @@
+{{- include "iperf3.validateValues" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "iperf3.fullname" . }}
+  labels:
+    {{- include "iperf3.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "iperf3.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "iperf3.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: {{ .Values.mode }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ include "iperf3.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range . }}
+        - name: {{ . }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ include "iperf3.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if eq .Values.mode "server" }}
+          command:
+            - iperf3
+          args:
+            - -s
+            - -p
+            - "{{ .Values.server.port }}"
+            - -i
+            - "{{ .Values.server.intervalSeconds }}"
+            {{- if .Values.server.forceFlush }}
+            - --forceflush
+            {{- end }}
+            {{- if .Values.server.verbose }}
+            - -V
+            {{- end }}
+            {{- range .Values.server.extraArgs }}
+            - {{ . | quote }}
+            {{- end }}
+          ports:
+            - name: iperf
+              containerPort: {{ .Values.server.port }}
+              protocol: TCP
+          {{- else }}
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              {{- if .Values.client.runForever }}
+              while true; do
+              {{- end }}
+                {{ include "iperf3.clientCommand" . }}
+              {{- if .Values.client.runForever }}
+                {{- if gt (int .Values.client.waitSeconds) 0 }}
+                sleep {{ .Values.client.waitSeconds }}
+                {{- end }}
+              done
+              {{- end }}
+          {{- end }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $commonEnv := default (list) .Values.extraEnv -}}
+          {{- if eq .Values.mode "server" }}
+          {{- $modeEnv := default (list) .Values.server.extraEnv -}}
+          {{- $env := concat $commonEnv $modeEnv -}}
+          {{- if $env }}
+          env:
+            {{- toYaml $env | nindent 12 }}
+          {{- end }}
+          {{- else }}
+          {{- $modeEnv := default (list) .Values.client.extraEnv -}}
+          {{- $env := concat $commonEnv $modeEnv -}}
+          {{- if $env }}
+          env:
+            {{- toYaml $env | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with .Values.extraEnvFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
