@@ -3,7 +3,7 @@ mode: client
 replicaCount: 1
 
 podLabels:
-  iperf.opencost.io/group: demo
+  iperf.opencost.io/group: test-infra
 
 topologySpreadConstraints:
   - maxSkew: 1
@@ -11,7 +11,7 @@ topologySpreadConstraints:
     whenUnsatisfiable: DoNotSchedule
     labelSelector:
       matchLabels:
-        iperf.opencost.io/group: demo
+        iperf.opencost.io/group: test-infra
 
 service:
   enabled: false

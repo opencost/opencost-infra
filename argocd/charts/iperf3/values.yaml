@@ -67,11 +67,6 @@ tolerations: []
 
 affinity: {}
 
-topologySpreadConstraints:
-  - maxSkew: 1
-    topologyKey: topology.kubernetes.io/zone
-    whenUnsatisfiable: DoNotSchedule
-
 priorityClassName: ""
 
 extraEnv: []
