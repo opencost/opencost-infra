@@ -129,13 +129,6 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.topologySpreadConstraints }}
-      {{- $selectorLabels := (include "iperf3.selectorLabels" $ | fromYaml) }}
       topologySpreadConstraints:
-        {{- range . }}
-          {{- $constraint := . }}
-          {{- if not (hasKey $constraint "labelSelector") }}
-            {{- $constraint = merge $constraint (dict "labelSelector" (dict "matchLabels" $selectorLabels)) }}
-          {{- end }}
-          {{- toYaml (list $constraint) | nindent 8 }}
-        {{- end }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
