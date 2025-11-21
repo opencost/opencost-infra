@@ -90,49 +90,6 @@ resource "oci_containerengine_node_pool" "gpu_node_pool" {
   }
 }
 
-resource "oci_containerengine_node_pool" "spot_node_pool" {
-  cluster_id         = module.oke.cluster_id
-  compartment_id     = var.compartment_id
-  kubernetes_version = var.kubernetes_version
-  name               = var.spot_node_pool_name
-  node_shape         = var.spot_node_shape
-
-  node_config_details {
-    nsg_ids = [module.oke.worker_nsg_id]
-    size    = var.spot_node_pool_size
-
-    placement_configs {
-      availability_domain = var.availability_domain
-      subnet_id           = module.oke.worker_subnet_id
-
-      preemptible_node_config {
-        preemption_action {
-          type                    = var.spot_preemption_action_type
-          is_preserve_boot_volume = var.spot_preserve_boot_volume
-        }
-      }
-    }
-  }
-
-  dynamic "node_shape_config" {
-    for_each = local.spot_shape_config_required ? [1] : []
-    content {
-      ocpus         = var.spot_node_ocpus
-      memory_in_gbs = var.spot_node_memory_in_gbs
-    }
-  }
-
-  node_source_details {
-    image_id                = var.image_id
-    source_type             = "IMAGE"
-    boot_volume_size_in_gbs = tostring(var.spot_node_boot_volume_size_gbs)
-  }
-
-  node_metadata = {
-    user_data = local.worker_node_user_data
-  }
-}
-
 # Retrieves the kubeconfig file content for the specified OCI Container Engine for Kubernetes (OKE) cluster
 data "oci_containerengine_cluster_kube_config" "opencost_cluster_config" {
   cluster_id = module.oke.cluster_id

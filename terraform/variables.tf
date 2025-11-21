@@ -50,6 +50,18 @@ variable "nodepools" {
       memory           = 32,
       size             = 5,
       boot_volume_size = 150,
+    },
+    np-spot = {
+      shape            = "VM.Optimized3.Flex"
+      ocpus            = 2,
+      memory           = 32,
+      size             = 2,
+      boot_volume_size = 150,
+
+      preemptible_config = {
+        enable = true
+        is_preserve_boot_volume = false
+      }
     }
   }
 }
