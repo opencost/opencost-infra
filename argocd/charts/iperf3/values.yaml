@@ -53,7 +53,7 @@ client:
   bandwidth: ""
   reverse: false
   omitSeconds: 0
-  waitSeconds: 30
+  waitSeconds: 3600
   runForever: true
   json: false
   extraArgs: []
