@@ -46,4 +46,4 @@ opencost:
     prometheusDataSource:
       queryResolutionSeconds: "60"
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-c0b7ce4
+      fullImageName: ghcr.io/opencost/opencost:develop-7048a93
