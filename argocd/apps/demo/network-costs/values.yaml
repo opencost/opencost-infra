@@ -13,6 +13,17 @@ networkCosts:
   enabled: true
   imagePullPolicy: Always
   config:
+    destinations:
+      in-zone:
+        # Loopback Addresses in "IANA IPv4 Special-Purpose Address Registry"
+        - "127.0.0.0/8"
+        # IPv4 Link Local Address Space
+        - "169.254.0.0/16"
+        # Private Address Ranges in RFC-1918
+        - "172.16.0.0/12"
+        - "192.168.0.0/16"
+        # Remove the following local IP range for multi-AZ kubernetes:
+        # - "10.0.0.0/8"
     services:
       # Enable all cloud providers for network costs
       amazon-web-services: true
