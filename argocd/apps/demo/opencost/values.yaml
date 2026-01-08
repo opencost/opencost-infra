@@ -19,6 +19,8 @@ opencost:
         - secretName: opencost-tls
           hosts:
             - demo.infra.opencost.io
+    image:
+      fullImageName: ghcr.io/opencost/opencost-ui:develop-2a6ae34
   mcp:
     ingress:
       enabled: true
