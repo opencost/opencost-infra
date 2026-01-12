@@ -10,6 +10,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
+  {{- if .Values.service.headless }}
+  clusterIP: None
+  {{- end }}
   type: {{ .Values.service.type }}
   {{- with .Values.service.externalIPs }}
   externalIPs:

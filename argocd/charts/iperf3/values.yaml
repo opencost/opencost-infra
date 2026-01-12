@@ -26,6 +26,7 @@ securityContext: {}
 service:
   enabled: true
   type: ClusterIP
+  headless: true
   port: 5201
   targetPort: 5201
   annotations: {}
