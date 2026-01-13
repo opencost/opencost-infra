@@ -70,7 +70,7 @@ spec:
               while true; do
               {{- end }}
                 echo "Resolving target host {{ .Values.client.targetHost }}..."
-                nslookup {{ .Values.client.targetHost }} || echo "nslookup failed, continuing anyway"
+                getent hosts {{ .Values.client.targetHost }} || (echo "getent hosts failed, trying ping..." && ping -c 1 {{ .Values.client.targetHost }} 2>&1 | grep -E "PING|from" || echo "DNS resolution failed, continuing anyway")
                 echo "Starting iperf3 test..."
                 {{ include "iperf3.clientCommand" . }}
               {{- if .Values.client.runForever }}
