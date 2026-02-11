@@ -43,3 +43,5 @@ opencost:
   exporter:
     prometheusDataSource:
       queryResolutionSeconds: "60"
+    image:
+      fullImageName: ghcr.io/opencost/opencost:develop-f19e9a4
