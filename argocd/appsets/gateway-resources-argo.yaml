@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: ingress-nginx
+  name: gateway-resources
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -9,31 +9,26 @@ spec:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: main
-      files:
-      - path: "argocd/apps/*/ingress-nginx/values.yaml"
+      directories:
+      - path: "argocd/apps/*/gateway-resources"
   template:
     metadata:
-      name: 'ingress-nginx-{{ index .path.segments 2 }}'
+      name: 'gateway-resources-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
     spec:
       project: default
-      sources:
-        - repoURL: https://kubernetes.github.io/ingress-nginx
-          targetRevision: 4.13.3
-          chart: ingress-nginx
-          helm:
-            valueFiles:
-            - '$values/argocd/apps/{{ index .path.segments 2 }}/ingress-nginx/values.yaml'
-        - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: main
-          ref: values
+      source:
+        repoURL: https://github.com/opencost/opencost-infra.git
+        targetRevision: main
+        path: '{{ .path.path }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: ingress-nginx
+        namespace: envoy-gateway-system
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
         - CreateNamespace=true
+        - ServerSideApply=true
