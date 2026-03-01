@@ -11,3 +11,4 @@ spec:
   to:
   - group: ""
     kind: Service
+    name: prometheus-kube-prometheus-prometheus
