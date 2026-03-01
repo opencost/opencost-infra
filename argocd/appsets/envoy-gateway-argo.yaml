@@ -21,9 +21,9 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: https://gateway.envoyproxy.io/helm-charts
-          targetRevision: v1.3.0
-          chart: gateway
+        - repoURL: docker.io/envoyproxy
+          targetRevision: v1.7.0
+          chart: gateway-helm
           helm:
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/envoy-gateway/values.yaml'
