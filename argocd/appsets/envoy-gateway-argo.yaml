@@ -16,6 +16,8 @@ spec:
       name: 'envoy-gateway-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
     spec:
       project: default
       sources:
