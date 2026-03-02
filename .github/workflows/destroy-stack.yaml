@@ -60,7 +60,7 @@ jobs:
                 echo "Namespace $ROUTE_NAMESPACE not found; skipping httproute deletions"
               fi
             else
-              echo "Gateway API CRDs or envoy-gateway-system namespace not found; skipping httproute deletions"
+              echo "Gateway API CRDs not found; skipping httproute deletions"
             fi
         - name: delete helm installs 
           run: |
