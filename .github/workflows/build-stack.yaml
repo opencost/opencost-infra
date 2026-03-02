@@ -252,7 +252,7 @@ jobs:
           spec:
             parentRefs:
             - name: envoy-gateway
-              namespace: envoy-gateway-system
+              namespace: ${ROUTE_NAMESPACE}
               sectionName: http
             hostnames:
             - ${TARGET_NAMESPACE}.infra.opencost.io
@@ -277,7 +277,7 @@ jobs:
           spec:
             parentRefs:
             - name: envoy-gateway
-              namespace: envoy-gateway-system
+              namespace: ${ROUTE_NAMESPACE}
               sectionName: http
             hostnames:
             - ${TARGET_NAMESPACE}-mcp.infra.opencost.io
