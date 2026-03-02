@@ -85,11 +85,11 @@ jobs:
         uses: azure/setup-kubectl@v4
       - name: Check for Gateway API CRDs
         run: |
-          if kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1; then
-            echo "Gateway API CRDs found"
+          if kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1 && kubectl get ns envoy-gateway-system >/dev/null 2>&1; then
+            echo "Gateway API CRDs and envoy-gateway-system namespace found"
             echo "GATEWAY_API_AVAILABLE=true" >> $GITHUB_ENV
           else
-            echo "::warning::Gateway API CRDs not found on cluster -- skipping HTTPRoute operations"
+            echo "::warning::Gateway API CRDs or envoy-gateway-system namespace not found -- skipping HTTPRoute operations"
             echo "GATEWAY_API_AVAILABLE=false" >> $GITHUB_ENV
           fi
       - name: delete old stack if still up
