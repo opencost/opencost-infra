@@ -13,7 +13,7 @@ spec:
       - path: "argocd/apps/*/reference-grant-*"
   template:
     metadata:
-      name: 'reference-grant-{{ index .path.segments 2 }}-{{ replace .path.basename "reference-grant-" "" }}'
+      name: 'reference-grant-{{ index .path.segments 2 }}-{{ .path.basename | trimPrefix "reference-grant-" }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
       annotations:
@@ -26,7 +26,7 @@ spec:
         path: '{{ .path.path }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{ replace .path.basename "reference-grant-" "" }}'
+        namespace: '{{ .path.basename | trimPrefix "reference-grant-" }}'
       syncPolicy:
         automated:
           prune: true
