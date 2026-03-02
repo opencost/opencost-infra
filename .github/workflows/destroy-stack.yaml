@@ -49,6 +49,19 @@ jobs:
                 echo "namespace ${{ inputs.namespace }} does not exist"
                 exit 0
             fi
+        - name: delete gateway httproutes
+          run: |
+            ROUTE_NAMESPACE="envoy-gateway-system"
+            if kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1; then
+              if kubectl get ns "$ROUTE_NAMESPACE" >/dev/null 2>&1; then
+                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${{ inputs.namespace }}-ui" --ignore-not-found
+                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${{ inputs.namespace }}-mcp" --ignore-not-found
+              else
+                echo "Namespace $ROUTE_NAMESPACE not found; skipping httproute deletions"
+              fi
+            else
+              echo "Gateway API CRDs not found; skipping httproute deletions"
+            fi
         - name: delete helm installs 
           run: |
             releases=$(helm ls --namespace ${{ inputs.namespace }} |  awk '{print $1}' | tail -n +2)

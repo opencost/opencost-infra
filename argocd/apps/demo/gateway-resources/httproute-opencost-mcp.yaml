@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: opencost-mcp
+  namespace: envoy-gateway-system
+spec:
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+    sectionName: https-opencost-mcp
+  hostnames:
+  - mcp-demo.infra.opencost.io
+  rules:
+  - backendRefs:
+    - name: opencost-demo
+      namespace: opencost
+      port: 8081

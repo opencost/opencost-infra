@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: prometheus
+  namespace: envoy-gateway-system
+spec:
+  parentRefs:
+  - name: envoy-gateway
+    namespace: envoy-gateway-system
+    sectionName: https-prometheus
+  hostnames:
+  - demo-prometheus.infra.opencost.io
+  rules:
+  - backendRefs:
+    - name: prometheus-kube-prometheus-prometheus
+      namespace: prometheus-system
+      port: 9090

@@ -1,8 +1,14 @@
 _1: &email Christian.Petersen2@ibm.com
 _2: &solvers
 - http01:
-    ingress:
-      class: nginx
+    gatewayHTTPRoute:
+      parentRefs:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        name: envoy-gateway
+        namespace: envoy-gateway-system
+        sectionName: http
+        port: 80
 
 clusterIssuers:
 - name: letsencrypt-demo
