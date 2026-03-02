@@ -89,9 +89,8 @@ jobs:
             echo "Gateway API CRDs and envoy-gateway-system namespace found"
             echo "GATEWAY_API_AVAILABLE=true" >> $GITHUB_ENV
           else
-            echo "::error::Gateway API CRDs not found on cluster; HTTPRoute operations cannot be performed. Failing workflow."
+            echo "::warning::Gateway API CRDs and/or envoy-gateway-system namespace not found on cluster; HTTPRoute operations will be skipped."
             echo "GATEWAY_API_AVAILABLE=false" >> $GITHUB_ENV
-            exit 1
           fi
       - name: delete old stack if still up
         run: |
