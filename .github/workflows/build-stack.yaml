@@ -83,6 +83,15 @@ jobs:
           fi
       - id: setup-kubectl
         uses: azure/setup-kubectl@v4
+      - name: Check for Gateway API CRDs
+        run: |
+          if kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1; then
+            echo "Gateway API CRDs found"
+            echo "GATEWAY_API_AVAILABLE=true" >> $GITHUB_ENV
+          else
+            echo "::warning::Gateway API CRDs not found on cluster -- skipping HTTPRoute operations"
+            echo "GATEWAY_API_AVAILABLE=false" >> $GITHUB_ENV
+          fi
       - name: delete old stack if still up
         run: |
           if kubectl get ns $TARGET_NAMESPACE; then
@@ -90,9 +99,11 @@ jobs:
               echo "namespace $TARGET_NAMESPACE exists, checking status"
               if kubectl get ns $TARGET_NAMESPACE -o json | jq -r '.status.phase' | grep -q "Terminating"; then
                 echo "namespace $TARGET_NAMESPACE is already in Terminating state, cleaning up routes and waiting for deletion"
-                ROUTE_NAMESPACE="envoy-gateway-system"
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
+                if [[ "$GATEWAY_API_AVAILABLE" == "true" ]]; then
+                  ROUTE_NAMESPACE="envoy-gateway-system"
+                  kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
+                  kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
+                fi
                 count=0
                 while kubectl get ns $TARGET_NAMESPACE >/dev/null 2>&1; do
                   if [ $count -ge 120 ]; then
@@ -107,9 +118,11 @@ jobs:
               fi
               
               echo "namespace $TARGET_NAMESPACE exists and is not terminating, proceeding with deletion"
-              ROUTE_NAMESPACE="envoy-gateway-system"
-              kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
-              kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
+              if [[ "$GATEWAY_API_AVAILABLE" == "true" ]]; then
+                ROUTE_NAMESPACE="envoy-gateway-system"
+                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
+                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
+              fi
               releases=$(helm ls --namespace $TARGET_NAMESPACE |  awk '{print $1}' | tail -n +2)
               for release in ${releases}; do
                   helm uninstall ${release} --namespace $TARGET_NAMESPACE
@@ -204,6 +217,10 @@ jobs:
       - name: Create ReferenceGrant and Gateway HTTPRoutes for OpenCost
         run: |
           set -e
+          if [[ "$GATEWAY_API_AVAILABLE" != "true" ]]; then
+            echo "::error::Gateway API CRDs are not installed on this cluster. Cannot create HTTPRoutes for stack access."
+            exit 1
+          fi
           ROUTE_NAMESPACE="envoy-gateway-system"
 
           echo "Creating ReferenceGrant in $TARGET_NAMESPACE to allow cross-namespace backendRefs from $ROUTE_NAMESPACE"
