@@ -49,6 +49,11 @@ jobs:
                 echo "namespace ${{ inputs.namespace }} does not exist"
                 exit 0
             fi
+        - name: delete gateway httproutes
+          run: |
+            ROUTE_NAMESPACE="envoy-gateway-system"
+            kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${{ inputs.namespace }}-ui" --ignore-not-found
+            kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${{ inputs.namespace }}-mcp" --ignore-not-found
         - name: delete helm installs 
           run: |
             releases=$(helm ls --namespace ${{ inputs.namespace }} |  awk '{print $1}' | tail -n +2)

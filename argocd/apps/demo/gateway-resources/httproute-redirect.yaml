@@ -8,6 +8,10 @@ spec:
   - name: envoy-gateway
     namespace: envoy-gateway-system
     sectionName: http
+  hostnames:
+  - demo.infra.opencost.io
+  - mcp-demo.infra.opencost.io
+  - demo-prometheus.infra.opencost.io
   rules:
   - filters:
     - type: RequestRedirect

@@ -43,7 +43,7 @@ jobs:
                     echo "current namespaces:"
                     kubectl get ns -o name
                     echo "--------------------------------"
-                    allowlist="iperf-demo chaoskube cnpg-system network-load-gen network-costs argo cert-manager default folding-at-home gpu-operator kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
+                    allowlist="iperf-demo chaoskube cnpg-system network-load-gen network-costs argo cert-manager default envoy-gateway-system folding-at-home gpu-operator kube-node-lease kube-public kube-system load-generator opencost prometheus-system sealed-secrets"
                     namespaces=$(kubectl get ns -o name | sed 's/namespace\///g')
               
                     for ns in ${namespaces}; do
@@ -58,6 +58,9 @@ jobs:
     
                         if [[ "${isallowed}" == "false" ]]; then
                             echo "deleting namespace ${ns}"
+                            ROUTE_NAMESPACE="envoy-gateway-system"
+                            kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${ns}-ui" --ignore-not-found
+                            kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${ns}-mcp" --ignore-not-found
                             releases=$(helm ls --namespace ${ns} |  awk '{print $1}' | tail -n +2)
                             for release in ${releases}; do
                                 helm uninstall ${release} --namespace ${ns}

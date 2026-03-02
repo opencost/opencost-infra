@@ -4,13 +4,8 @@ opencost:
       emitNamespaceAnnotations: true
       emitPodAnnotations: true
   ui:
-    ingress:
-      enabled: false
     image:
       fullImageName: ghcr.io/opencost/opencost-ui:develop-71c0b43
-  mcp:
-    ingress:
-      enabled: false
   prometheus:
     internal:
       serviceName: prometheus-kube-prometheus-prometheus
