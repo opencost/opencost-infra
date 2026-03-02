@@ -7,6 +7,8 @@ _2: &solvers
         kind: Gateway
         name: envoy-gateway
         namespace: envoy-gateway-system
+        sectionName: http
+        port: 80
 
 clusterIssuers:
 - name: letsencrypt-demo
