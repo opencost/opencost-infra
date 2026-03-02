@@ -112,6 +112,10 @@ jobs:
               done
               sleep 5
               kubectl delete ns $TARGET_NAMESPACE --wait=false
+              # Delete any HTTPRoutes created for this namespace in the Envoy Gateway namespace
+              ROUTE_NAMESPACE="envoy-gateway-system"
+              kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
+              kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
               count=0
               while kubectl get ns $TARGET_NAMESPACE >/dev/null 2>&1; do
                   if [ $count -ge 120 ]; then
@@ -186,14 +190,7 @@ jobs:
                 enabled: ${PROMLESS}
             ui:
               ingress:
-                enabled: true
-                ingressClassName: \"nginx\"
-                annotations:
-                  kubernetes.io/ingress.class: nginx
-                hosts:
-                  - host: ${TARGET_NAMESPACE}.infra.opencost.io
-                    paths:
-                      - /
+                enabled: false
             prometheus:
               enabled: ${PROMETHEUS}
               internal:
@@ -201,15 +198,7 @@ jobs:
                   port: 9090
             mcp:
               ingress:
-                enabled: true
-                ingressClassName: \"nginx\"
-                annotations:
-                  kubernetes.io/ingress.class: nginx
-                hosts:
-                  - host: ${TARGET_NAMESPACE}-mcp.infra.opencost.io
-                    paths:
-                      - path: /
-                        pathType: Prefix
+                enabled: false
 
           " > /tmp/values.yaml
           
@@ -222,3 +211,47 @@ jobs:
             -n $TARGET_NAMESPACE \
             -f /tmp/values.yaml \
             $versionOpts $containerOpts
+      - name: Create Gateway HTTPRoutes for OpenCost
+        env:
+          TARGET_NAMESPACE: ${{ inputs.namespace }}
+        run: |
+          set -e
+          ROUTE_NAMESPACE="envoy-gateway-system"
+
+          echo "Creating HTTPRoute for OpenCost UI in namespace $ROUTE_NAMESPACE targeting backend namespace $TARGET_NAMESPACE"
+          kubectl -n "$ROUTE_NAMESPACE" apply -f - <<EOF
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: HTTPRoute
+          metadata:
+            name: opencost-${TARGET_NAMESPACE}-ui
+            namespace: ${ROUTE_NAMESPACE}
+          spec:
+            parentRefs:
+            - name: envoy-gateway
+              namespace: envoy-gateway-system
+              sectionName: http
+            rules:
+            - backendRefs:
+              - name: ${TARGET_NAMESPACE}-opencost
+                namespace: ${TARGET_NAMESPACE}
+                port: 9090
+          EOF
+
+          echo "Creating HTTPRoute for OpenCost MCP in namespace $ROUTE_NAMESPACE targeting backend namespace $TARGET_NAMESPACE"
+          kubectl -n "$ROUTE_NAMESPACE" apply -f - <<EOF
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: HTTPRoute
+          metadata:
+            name: opencost-${TARGET_NAMESPACE}-mcp
+            namespace: ${ROUTE_NAMESPACE}
+          spec:
+            parentRefs:
+            - name: envoy-gateway
+              namespace: envoy-gateway-system
+              sectionName: http
+            rules:
+            - backendRefs:
+              - name: ${TARGET_NAMESPACE}-opencost
+                namespace: ${TARGET_NAMESPACE}
+                port: 8081
+          EOF
