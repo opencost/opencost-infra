@@ -110,7 +110,6 @@ jobs:
                   sleep 3
                   count=$((count + 1))
                 done
-                exit 0
               fi
               
               echo "namespace $TARGET_NAMESPACE exists and is not terminating, proceeding with deletion"
