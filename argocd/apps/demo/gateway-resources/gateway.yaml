@@ -13,7 +13,7 @@ spec:
     port: 80
     allowedRoutes:
       namespaces:
-        from: Same
+        from: All
   - name: https-opencost-ui
     protocol: HTTPS
     port: 443
