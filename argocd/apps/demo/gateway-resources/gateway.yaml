@@ -1,0 +1,52 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: envoy-gateway
+  namespace: envoy-gateway-system
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-demo
+spec:
+  gatewayClassName: envoy
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-opencost-ui
+    protocol: HTTPS
+    port: 443
+    hostname: demo.infra.opencost.io
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: opencost-tls
+        kind: Secret
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-opencost-mcp
+    protocol: HTTPS
+    port: 443
+    hostname: mcp-demo.infra.opencost.io
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: opencost-mcp-tls
+        kind: Secret
+    allowedRoutes:
+      namespaces:
+        from: All
+  - name: https-prometheus
+    protocol: HTTPS
+    port: 443
+    hostname: demo-prometheus.infra.opencost.io
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: prometheus-tls
+        kind: Secret
+    allowedRoutes:
+      namespaces:
+        from: All

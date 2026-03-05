@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: ingress-nginx
+  name: envoy-gateway
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -10,30 +10,33 @@ spec:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: main
       files:
-      - path: "argocd/apps/*/ingress-nginx/values.yaml"
+      - path: "argocd/apps/*/envoy-gateway/values.yaml"
   template:
     metadata:
-      name: 'ingress-nginx-{{ index .path.segments 2 }}'
+      name: 'envoy-gateway-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
     spec:
       project: default
       sources:
-        - repoURL: https://kubernetes.github.io/ingress-nginx
-          targetRevision: 4.13.3
-          chart: ingress-nginx
+        - repoURL: oci://docker.io/envoyproxy/gateway-helm
+          chart: gateway-helm
+          targetRevision: v1.7.0
           helm:
             valueFiles:
-            - '$values/argocd/apps/{{ index .path.segments 2 }}/ingress-nginx/values.yaml'
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/envoy-gateway/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
           targetRevision: main
           ref: values
       destination:
         server: https://kubernetes.default.svc
-        namespace: ingress-nginx
+        namespace: envoy-gateway-system
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
         syncOptions:
         - CreateNamespace=true
+        - ServerSideApply=true

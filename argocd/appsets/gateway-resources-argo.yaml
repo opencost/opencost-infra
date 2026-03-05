@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: prometheus-ingress
+  name: gateway-resources
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -9,28 +9,24 @@ spec:
   - git:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: main
-      files:
-      - path: "argocd/apps/*/prometheus/values.yaml"
+      directories:
+      - path: "argocd/apps/*/gateway-resources"
   template:
     metadata:
-      name: 'prometheus-ingress'
+      name: 'gateway-resources-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "2"
     spec:
       project: default
-      sources:
-        - repoURL: https://ameijer.github.io/k8s-as-helm/
-          targetRevision: 1.0.3
-          chart: ingress
-          helm:
-            valueFiles:
-            - '$values/argocd/apps/{{ index .path.segments 2 }}/prometheus/values.yaml'
-        - repoURL: https://github.com/opencost/opencost-infra.git
-          targetRevision: main
-          ref: values
+      source:
+        repoURL: https://github.com/opencost/opencost-infra.git
+        targetRevision: main
+        path: '{{ .path.path }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: prometheus-system
+        namespace: envoy-gateway-system
       syncPolicy:
         automated:
           prune: true

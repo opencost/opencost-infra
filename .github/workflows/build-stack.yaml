@@ -83,9 +83,14 @@ jobs:
           fi
       - id: setup-kubectl
         uses: azure/setup-kubectl@v4
+      - name: Check for Gateway API CRDs
+        run: |
+          if ! kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1 || ! kubectl get ns envoy-gateway-system >/dev/null 2>&1; then
+            echo "::error::Gateway API CRDs or envoy-gateway-system namespace not found. Stack requires Gateway API for route access."
+            exit 1
+          fi
+          echo "Gateway API CRDs and envoy-gateway-system namespace found"
       - name: delete old stack if still up
-        env:
-          TARGET_NAMESPACE: ${{ inputs.namespace }}
         run: |
           if kubectl get ns $TARGET_NAMESPACE; then
 
@@ -102,32 +107,29 @@ jobs:
                   sleep 3
                   count=$((count + 1))
                 done
-                exit 0
+              else
+                echo "namespace $TARGET_NAMESPACE exists and is not terminating, proceeding with deletion"
+                releases=$(helm ls --namespace $TARGET_NAMESPACE |  awk '{print $1}' | tail -n +2)
+                for release in ${releases}; do
+                    helm uninstall ${release} --namespace $TARGET_NAMESPACE
+                done
+                sleep 5
+                kubectl delete ns $TARGET_NAMESPACE --wait=false
+                count=0
+                while kubectl get ns $TARGET_NAMESPACE >/dev/null 2>&1; do
+                    if [ $count -ge 120 ]; then
+                        echo "Timed out waiting for namespace $TARGET_NAMESPACE to be deleted"
+                        exit 1
+                    fi
+                    echo "Waiting for namespace $TARGET_NAMESPACE to be deleted..."
+                    sleep 3
+                    count=$((count + 1))
+                done
               fi
-              
-              echo "namespace $TARGET_NAMESPACE exists and is not terminating, proceeding with deletion"
-              releases=$(helm ls --namespace $TARGET_NAMESPACE |  awk '{print $1}' | tail -n +2)
-              for release in ${releases}; do
-                  helm uninstall ${release} --namespace $TARGET_NAMESPACE
-              done
-              sleep 5
-              kubectl delete ns $TARGET_NAMESPACE --wait=false
-              count=0
-              while kubectl get ns $TARGET_NAMESPACE >/dev/null 2>&1; do
-                  if [ $count -ge 120 ]; then
-                      echo "Timed out waiting for namespace $TARGET_NAMESPACE to be deleted"
-                      exit 1
-                  fi
-                  echo "Waiting for namespace $TARGET_NAMESPACE to be deleted..."
-                  sleep 3
-                  count=$((count + 1))
-              done
           else
               echo "namespace $TARGET_NAMESPACE does not exist"
           fi 
       - name: create namespace
-        env:
-          TARGET_NAMESPACE: ${{ inputs.namespace }}
         run: |
           kubectl create namespace $TARGET_NAMESPACE
       - name: get ns
@@ -135,8 +137,6 @@ jobs:
           kubectl get ns
      
       - id: create-pod-disruption-budget
-        env:
-          TARGET_NAMESPACE: ${{ inputs.namespace }}
         run: |
           kubectl -n $TARGET_NAMESPACE apply -f - <<EOF
           apiVersion: policy/v1
@@ -151,7 +151,6 @@ jobs:
       
       - name: Deploy OC chart with helm
         env:
-          TARGET_NAMESPACE: ${{ inputs.namespace }}
           CHART_VERSION: ${{ inputs.chartVersion }}
           OC_CONTAINER_VERSION: ${{ inputs.oc-container-version }}
           OC_UI_VERSION: ${{ inputs.oc-ui-version }}
@@ -180,36 +179,34 @@ jobs:
           # fi
               
           echo "
+          fullnameOverride: opencost
           opencost:
+            ui:
+              httpRoute:
+                enabled: true
+                parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
+                    sectionName: http
+                hostnames:
+                  - ${TARGET_NAMESPACE}.infra.opencost.io
+            mcp:
+              httpRoute:
+                enabled: true
+                parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
+                    sectionName: http
+                hostnames:
+                  - ${TARGET_NAMESPACE}-mcp.infra.opencost.io
             exporter:
               collectorDataSource:
                 enabled: ${PROMLESS}
-            ui:
-              ingress:
-                enabled: true
-                ingressClassName: \"nginx\"
-                annotations:
-                  kubernetes.io/ingress.class: nginx
-                hosts:
-                  - host: ${TARGET_NAMESPACE}.infra.opencost.io
-                    paths:
-                      - /
             prometheus:
               enabled: ${PROMETHEUS}
               internal:
                   serviceName: prometheus-kube-prometheus-prometheus
                   port: 9090
-            mcp:
-              ingress:
-                enabled: true
-                ingressClassName: \"nginx\"
-                annotations:
-                  kubernetes.io/ingress.class: nginx
-                hosts:
-                  - host: ${TARGET_NAMESPACE}-mcp.infra.opencost.io
-                    paths:
-                      - path: /
-                        pathType: Prefix
 
           " > /tmp/values.yaml
           

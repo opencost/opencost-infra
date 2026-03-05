@@ -49,7 +49,7 @@ jobs:
                 echo "namespace ${{ inputs.namespace }} does not exist"
                 exit 0
             fi
-        - name: delete helm installs 
+        - name: delete helm installs
           run: |
             releases=$(helm ls --namespace ${{ inputs.namespace }} |  awk '{print $1}' | tail -n +2)
             for release in ${releases}; do
