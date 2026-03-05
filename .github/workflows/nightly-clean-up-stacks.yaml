@@ -58,11 +58,6 @@ jobs:
     
                         if [[ "${isallowed}" == "false" ]]; then
                             echo "deleting namespace ${ns}"
-                            ROUTE_NAMESPACE="envoy-gateway-system"
-                            if kubectl get crd httproutes.gateway.networking.k8s.io >/dev/null 2>&1 && kubectl get ns "$ROUTE_NAMESPACE" >/dev/null 2>&1; then
-                                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${ns}-ui" --ignore-not-found
-                                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${ns}-mcp" --ignore-not-found
-                            fi
                             releases=$(helm ls --namespace ${ns} |  awk '{print $1}' | tail -n +2)
                             for release in ${releases}; do
                                 helm uninstall ${release} --namespace ${ns}
