@@ -30,3 +30,21 @@ resource "kubernetes_cluster_role_binding" "argocd_cluster_admin" {
     namespace = "argo"
   }
 }
+
+resource "kubernetes_cluster_role_binding" "envoy_gateway_cluster_admin" {
+  metadata {
+    name = "envoy-gateway-cluster-admin"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "envoy-gateway"
+    namespace = "envoy-gateway-system"
+  }
+}
