@@ -10,3 +10,23 @@ resource "helm_release" "argo_cd" {
         value = "ClusterIP"
     }
 }
+
+resource "kubernetes_cluster_role_binding" "argocd_cluster_admin" {
+  depends_on = [helm_release.argo_cd]
+
+  metadata {
+    name = "argocd-application-controller-cluster-admin"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = "argocd-application-controller"
+    namespace = "argo"
+  }
+}
