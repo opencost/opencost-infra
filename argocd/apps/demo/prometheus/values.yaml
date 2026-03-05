@@ -8,6 +8,17 @@ alertmanager:
   enabled: false
 
 prometheus:
+  route:
+    main:
+      enabled: true
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      hostnames:
+        - demo-prometheus.infra.opencost.io
+      parentRefs:
+        - name: envoy-gateway
+          namespace: envoy-gateway-system
+          sectionName: https-prometheus
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
     resources:
