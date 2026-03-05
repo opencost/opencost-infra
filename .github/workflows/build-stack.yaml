@@ -96,10 +96,7 @@ jobs:
 
               echo "namespace $TARGET_NAMESPACE exists, checking status"
               if kubectl get ns $TARGET_NAMESPACE -o json | jq -r '.status.phase' | grep -q "Terminating"; then
-                echo "namespace $TARGET_NAMESPACE is already in Terminating state, cleaning up routes and waiting for deletion"
-                ROUTE_NAMESPACE="envoy-gateway-system"
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
+                echo "namespace $TARGET_NAMESPACE is already in Terminating state, waiting for deletion"
                 count=0
                 while kubectl get ns $TARGET_NAMESPACE >/dev/null 2>&1; do
                   if [ $count -ge 120 ]; then
@@ -112,9 +109,6 @@ jobs:
                 done
               else
                 echo "namespace $TARGET_NAMESPACE exists and is not terminating, proceeding with deletion"
-                ROUTE_NAMESPACE="envoy-gateway-system"
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-ui" --ignore-not-found
-                kubectl -n "$ROUTE_NAMESPACE" delete httproute "opencost-${TARGET_NAMESPACE}-mcp" --ignore-not-found
                 releases=$(helm ls --namespace $TARGET_NAMESPACE |  awk '{print $1}' | tail -n +2)
                 for release in ${releases}; do
                     helm uninstall ${release} --namespace $TARGET_NAMESPACE
@@ -187,6 +181,24 @@ jobs:
           echo "
           fullnameOverride: opencost
           opencost:
+            ui:
+              httpRoute:
+                enabled: true
+                parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
+                    sectionName: http
+                hostnames:
+                  - ${TARGET_NAMESPACE}.infra.opencost.io
+            mcp:
+              httpRoute:
+                enabled: true
+                parentRefs:
+                  - name: envoy-gateway
+                    namespace: envoy-gateway-system
+                    sectionName: http
+                hostnames:
+                  - ${TARGET_NAMESPACE}-mcp.infra.opencost.io
             exporter:
               collectorDataSource:
                 enabled: ${PROMLESS}
@@ -207,75 +219,3 @@ jobs:
             -n $TARGET_NAMESPACE \
             -f /tmp/values.yaml \
             $versionOpts $containerOpts
-      - name: Create ReferenceGrant and Gateway HTTPRoutes for OpenCost
-        run: |
-          set -e
-          ROUTE_NAMESPACE="envoy-gateway-system"
-
-          echo "Creating ReferenceGrant in $TARGET_NAMESPACE to allow cross-namespace backendRefs from $ROUTE_NAMESPACE"
-          kubectl -n "$TARGET_NAMESPACE" apply -f - <<EOF
-          apiVersion: gateway.networking.k8s.io/v1beta1
-          kind: ReferenceGrant
-          metadata:
-            name: allow-envoy-gateway-routes
-            namespace: ${TARGET_NAMESPACE}
-          spec:
-            from:
-            - group: gateway.networking.k8s.io
-              kind: HTTPRoute
-              namespace: ${ROUTE_NAMESPACE}
-            to:
-            - group: ""
-              kind: Service
-              name: opencost
-          EOF
-
-          echo "Creating HTTPRoute for OpenCost UI"
-          kubectl -n "$ROUTE_NAMESPACE" apply -f - <<EOF
-          apiVersion: gateway.networking.k8s.io/v1
-          kind: HTTPRoute
-          metadata:
-            name: opencost-${TARGET_NAMESPACE}-ui
-            namespace: ${ROUTE_NAMESPACE}
-          spec:
-            parentRefs:
-            - name: envoy-gateway
-              namespace: ${ROUTE_NAMESPACE}
-              sectionName: http
-            hostnames:
-            - ${TARGET_NAMESPACE}.infra.opencost.io
-            rules:
-            - matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-              backendRefs:
-              - name: opencost
-                namespace: ${TARGET_NAMESPACE}
-                port: 9090
-          EOF
-
-          echo "Creating HTTPRoute for OpenCost MCP"
-          kubectl -n "$ROUTE_NAMESPACE" apply -f - <<EOF
-          apiVersion: gateway.networking.k8s.io/v1
-          kind: HTTPRoute
-          metadata:
-            name: opencost-${TARGET_NAMESPACE}-mcp
-            namespace: ${ROUTE_NAMESPACE}
-          spec:
-            parentRefs:
-            - name: envoy-gateway
-              namespace: ${ROUTE_NAMESPACE}
-              sectionName: http
-            hostnames:
-            - ${TARGET_NAMESPACE}-mcp.infra.opencost.io
-            rules:
-            - matches:
-              - path:
-                  type: PathPrefix
-                  value: /
-              backendRefs:
-              - name: opencost
-                namespace: ${TARGET_NAMESPACE}
-                port: 8081
-          EOF
