@@ -4,8 +4,25 @@ opencost:
       emitNamespaceAnnotations: true
       emitPodAnnotations: true
   ui:
+    httpRoute:
+      enabled: true
+      parentRefs:
+        - name: envoy-gateway
+          namespace: envoy-gateway-system
+          sectionName: https-opencost-ui
+      hostnames:
+        - demo.infra.opencost.io
     image:
       fullImageName: ghcr.io/opencost/opencost-ui:develop-71c0b43
+  mcp:
+    httpRoute:
+      enabled: true
+      parentRefs:
+        - name: envoy-gateway
+          namespace: envoy-gateway-system
+          sectionName: https-opencost-mcp
+      hostnames:
+        - mcp-demo.infra.opencost.io
   prometheus:
     internal:
       serviceName: prometheus-kube-prometheus-prometheus
