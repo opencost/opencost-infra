@@ -8,6 +8,8 @@ alertmanager:
   enabled: false
 
 prometheus:
+  ingress:
+    enabled: false
   route:
     main:
       enabled: true
