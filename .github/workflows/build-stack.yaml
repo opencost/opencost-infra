@@ -179,7 +179,7 @@ jobs:
           # fi
               
           echo "
-          fullnameOverride: opencost
+          fullnameOverride: oc-${TARGET_NAMESPACE}
           opencost:
             ui:
               httpRoute:
