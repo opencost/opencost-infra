@@ -36,4 +36,6 @@ opencost:
       enabled: true
       existingSecret: "opencost-admin-token"
       secretKey: "admin-token"
-    cloudIntegrationSecret: "opencost-cloud-integration"
+  cloudIntegrationSecret: "opencost-cloud-integration"
+  cloudCost:
+    enabled: true
