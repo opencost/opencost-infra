@@ -31,7 +31,7 @@ opencost:
     prometheusDataSource:
       queryResolutionSeconds: "60"
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-db82bd7
+      fullImageName: ghcr.io/opencost/opencost:develop-7b6838b
     adminToken:
       enabled: true
       existingSecret: "opencost-admin-token"
