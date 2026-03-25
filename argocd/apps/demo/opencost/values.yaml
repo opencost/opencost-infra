@@ -1,4 +1,7 @@
 opencost:
+  # Schedule on the large pool; exporter + UI requests total ~75% of one np-demo-large node (6 OCPU, 96GiB)
+  nodeSelector:
+    oke.oraclecloud.com/pool.name: np-demo-large
   metrics:
     kubeStateMetrics:
       emitNamespaceAnnotations: true
@@ -14,6 +17,12 @@ opencost:
         - demo.infra.opencost.io
     image:
       fullImageName: ghcr.io/opencost/opencost-ui:develop-71c0b43
+    resources:
+      requests:
+        cpu: 100m
+        memory: 2Gi
+      limits:
+        memory: 2Gi
   mcp:
     httpRoute:
       enabled: true
@@ -36,6 +45,12 @@ opencost:
       enabled: true
       existingSecret: "opencost-admin-token"
       secretKey: "admin-token"
+    resources:
+      requests:
+        cpu: 4400m
+        memory: 70Gi
+      limits:
+        memory: 70Gi
   cloudIntegrationSecret: "opencost-cloud-integration"
   cloudCost:
     enabled: true

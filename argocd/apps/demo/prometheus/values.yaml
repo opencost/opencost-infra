@@ -23,12 +23,15 @@ prometheus:
           sectionName: https-prometheus
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    # 75% of np-demo-large VM (6 OCPU, 96GiB allocatable)
+    nodeSelector:
+      oke.oraclecloud.com/pool.name: np-demo-large
     resources:
       requests:
-        cpu: 3400m
-        memory: 4Gi
+        cpu: 4500m
+        memory: 72Gi
       limits:
-        memory: 25Gi
+        memory: 72Gi
     storageSpec:
       volumeClaimTemplate:
         spec:
