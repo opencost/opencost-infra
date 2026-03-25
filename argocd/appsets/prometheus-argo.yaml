@@ -23,6 +23,12 @@ spec:
           targetRevision: 70.3.0
           chart: kube-prometheus-stack
           helm:
+            # networking.k8s.io/v1beta1 Ingress was removed in Kubernetes 1.22+. kube-prometheus-stack
+            # picks Ingress apiVersion from Helm Capabilities; Argo must pass v1 + a recent kubeVersion
+            # or template output can be v1beta1 and sync fails on modern clusters.
+            kubeVersion: "1.31.1"
+            apiVersions:
+              - networking.k8s.io/v1
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/prometheus/values.yaml'
         - repoURL: https://github.com/opencost/opencost-infra.git
