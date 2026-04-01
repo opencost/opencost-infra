@@ -16,7 +16,7 @@ opencost:
       hostnames:
         - demo.infra.opencost.io
     image:
-      fullImageName: ghcr.io/opencost/opencost-ui:test-b8e71bd
+      fullImageName: ghcr.io/opencost/opencost-ui:test-41370af
     resources:
       requests:
         cpu: 100m
