@@ -159,6 +159,9 @@ Please reconcile IaC, apply changes with elevated access if required, and close 
       - name: Setup Helm
         uses: azure/setup-helm@v4
 
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+
       - name: Create kind cluster
         uses: helm/kind-action@v1.8.0
         with:
@@ -172,4 +175,37 @@ Please reconcile IaC, apply changes with elevated access if required, and close 
           helm install iperf3 argocd/charts/iperf3 \
             --namespace devsecops \
             --create-namespace \
+            --dry-run=server
+
+      - name: Install Prometheus (required for OpenCost)
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm install prometheus prometheus-community/prometheus \
+            --namespace prometheus-system \
+            --create-namespace \
+            --set prometheus-pushgateway.enabled=false \
+            --set alertmanager.enabled=false \
+            -f https://raw.githubusercontent.com/opencost/opencost/develop/kubernetes/prometheus/extraScrapeConfigs.yaml
+
+      - name: Create OpenCost namespace
+        run: kubectl create namespace opencost
+
+      - name: Server-side dry-run OpenCost Helm install (on-prem custom pricing)
+        run: |
+          helm repo add opencost https://opencost.github.io/opencost-helm-chart
+          helm repo update
+          cat > /tmp/local-values.yaml <<'EOF'
+opencost:
+  customPricing:
+    enabled: true
+    costModel:
+      description: "On-prem test pricing for CI dry-run"
+      CPU: 1.25
+      RAM: 0.50
+      storage: 0.25
+EOF
+          helm install opencost opencost/opencost \
+            --namespace opencost \
+            -f /tmp/local-values.yaml \
             --dry-run=server
