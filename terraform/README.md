@@ -106,3 +106,19 @@ Azure OIDC credentials are required for the plan step:
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
+
+## CD / Apply pipeline
+
+`.github/workflows/devsecops-cd.yaml` performs gated Terraform apply with Azure OIDC:
+
+- `plan` job: runs `terraform plan` with remote state (backend config required), uploads `tfplan`
+- `apply` job: requires environment approval (GitHub environment `production`), downloads `tfplan`, and runs `terraform apply`
+
+Required secrets:
+
+- `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` (OIDC)
+- `TF_BACKEND_CONFIG` (contents of backend config, e.g., Azure Blob backend)
+
+Optional:
+
+- `TF_VARS` (multiline terraform tfvars content)

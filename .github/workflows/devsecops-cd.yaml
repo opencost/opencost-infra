@@ -1,0 +1,138 @@
+name: DevSecOps CD for IaC (Terraform Apply)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: "Git ref to deploy (branch, tag, or SHA)"
+        required: false
+        default: "main"
+  workflow_call:
+    inputs:
+      target_ref:
+        description: "Git ref to deploy (branch, tag, or SHA)"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+
+env:
+  TF_WORKING_DIR: terraform
+  TF_BACKEND_FILE: /tmp/backend.hcl
+  TF_VARS_FILE: /tmp/terraform.auto.tfvars
+  TF_IN_AUTOMATION: "true"
+  ARM_USE_OIDC: "true"
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      plan_artifact: ${{ steps.plan-artifact.outputs.name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_ref || github.ref_name }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+          terraform_wrapper: false
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Write backend config from secret
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.TF_BACKEND_CONFIG }}" ]; then
+            echo "::error::TF_BACKEND_CONFIG secret is required for apply."
+            exit 1
+          fi
+          echo "${{ secrets.TF_BACKEND_CONFIG }}" > "${TF_BACKEND_FILE}"
+
+      - name: Write tfvars (optional)
+        if: ${{ secrets.TF_VARS != '' }}
+        shell: bash
+        run: |
+          echo "${{ secrets.TF_VARS }}" > "${TF_VARS_FILE}"
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="${TF_BACKEND_FILE}" -input=false -upgrade
+
+      - name: Terraform plan
+        id: plan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Upload plan artifact
+        id: plan-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ github.run_id }}
+          path: ${{ env.TF_WORKING_DIR }}/tfplan
+          if-no-files-found: error
+
+  apply:
+    runs-on: ubuntu-latest
+    needs: plan
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_ref || github.ref_name }}
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.plan.outputs.plan_artifact }}
+          path: ${{ env.TF_WORKING_DIR }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.14.8
+          terraform_wrapper: false
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Write backend config from secret
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.TF_BACKEND_CONFIG }}" ]; then
+            echo "::error::TF_BACKEND_CONFIG secret is required for apply."
+            exit 1
+          fi
+          echo "${{ secrets.TF_BACKEND_CONFIG }}" > "${TF_BACKEND_FILE}"
+
+      - name: Write tfvars (optional)
+        if: ${{ secrets.TF_VARS != '' }}
+        shell: bash
+        run: |
+          echo "${{ secrets.TF_VARS }}" > "${TF_VARS_FILE}"
+
+      - name: Terraform init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -backend-config="${TF_BACKEND_FILE}" -input=false
+
+      - name: Terraform apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -input=false tfplan
