@@ -7,7 +7,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
-      repoURL: https://github.com/opencost/opencost-infra.git
+      repoURL: https://github.com/trucpd/opencost-infra.git
       revision: main
       directories:
       - path: "argocd/apps/*/gateway-resources"
@@ -21,7 +21,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/opencost/opencost-infra.git
+        repoURL: https://github.com/trucpd/opencost-infra.git
         targetRevision: main
         path: '{{ .path.path }}'
       destination:

@@ -7,7 +7,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
     - git:
-        repoURL: https://github.com/opencost/opencost-infra.git
+        repoURL: https://github.com/trucpd/opencost-infra.git
         revision: main
         files:
           - path: "argocd/apps/*/iperf-client/values.yaml"
@@ -19,13 +19,13 @@ spec:
     spec:
       project: default
       sources:
-        - repoURL: https://github.com/opencost/opencost-infra.git
+        - repoURL: https://github.com/trucpd/opencost-infra.git
           targetRevision: main
           path: argocd/charts/iperf3
           helm:
             valueFiles:
               - '$values/argocd/apps/{{ index .path.segments 2 }}/iperf-client/values.yaml'
-        - repoURL: https://github.com/opencost/opencost-infra.git
+        - repoURL: https://github.com/trucpd/opencost-infra.git
           targetRevision: main
           ref: values
       destination:

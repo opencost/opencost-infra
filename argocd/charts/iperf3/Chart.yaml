@@ -9,7 +9,7 @@ keywords:
   - iperf3
   - networking
   - benchmarking
-home: https://github.com/opencost/opencost-infra
+home: https://github.com/trucpd/opencost-infra
 maintainers:
   - name: OpenCost
     url: https://www.opencost.io

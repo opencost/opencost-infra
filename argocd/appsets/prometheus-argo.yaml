@@ -7,7 +7,7 @@ spec:
   goTemplateOptions: ["missingkey=error"]
   generators:
   - git:
-      repoURL: https://github.com/opencost/opencost-infra.git
+      repoURL: https://github.com/trucpd/opencost-infra.git
       revision: main
       files:
       - path: "argocd/apps/*/prometheus/values.yaml"
@@ -31,7 +31,7 @@ spec:
               - networking.k8s.io/v1
             valueFiles:
             - '$values/argocd/apps/{{ index .path.segments 2 }}/prometheus/values.yaml'
-        - repoURL: https://github.com/opencost/opencost-infra.git
+        - repoURL: https://github.com/trucpd/opencost-infra.git
           targetRevision: main
           ref: values
       destination:

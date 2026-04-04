@@ -91,3 +91,18 @@ You can disable the GPU pool by setting `gpu_node_pool.enabled = false` if your 
 - `kubeconfig` — path to the generated kubeconfig targeting the AKS cluster
 - `aks_cluster_name` — AKS cluster name
 - `resource_group_name` — resource group containing the AKS resources
+
+## CI / DevSecOps pipeline
+
+Pull requests and pushes run `.github/workflows/devsecops-pipeline.yaml`, which:
+
+- Formats, inits (local backend), and validates Terraform
+- Generates a local plan artifact (`terraform/tfplan`) and opens a drift issue on default-branch runs when changes are detected
+- Scans IaC with `tfsec` and CodeQL (security-extended)
+- Spins up a KinD cluster and performs a server-side dry-run Helm install of the iperf3 chart as a lightweight integration check
+
+Azure OIDC credentials are required for the plan step:
+
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
