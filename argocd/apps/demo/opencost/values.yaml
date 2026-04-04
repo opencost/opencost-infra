@@ -1,7 +1,7 @@
 opencost:
   # Schedule on the large pool; exporter + UI requests total ~75% of one np-demo-large node (6 OCPU, 96GiB)
-  nodeSelector:
-    kubernetes.azure.com/agentpool: system
+  # nodeSelector:
+  #   kubernetes.azure.com/agentpool: system
   metrics:
     kubeStateMetrics:
       emitNamespaceAnnotations: true

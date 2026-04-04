@@ -24,8 +24,8 @@ prometheus:
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
     # 75% of a system node
-    nodeSelector:
-      kubernetes.azure.com/agentpool: system
+    # nodeSelector:
+    #   kubernetes.azure.com/agentpool: system
     resources:
       requests:
         cpu: 4500m
