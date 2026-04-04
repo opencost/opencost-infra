@@ -62,7 +62,8 @@ client:
 
 resources: {}
 
-nodeSelector: {}
+nodeSelector:
+  kubernetes.azure.com/agentpool: system
 
 tolerations: []
 

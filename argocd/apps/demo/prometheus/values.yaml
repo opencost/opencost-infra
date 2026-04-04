@@ -23,9 +23,9 @@ prometheus:
           sectionName: https-prometheus
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
-    # 75% of np-demo-large VM (6 OCPU, 96GiB allocatable)
+    # 75% of a system node
     nodeSelector:
-      oke.oraclecloud.com/pool.name: np-demo-large
+      kubernetes.azure.com/agentpool: system
     resources:
       requests:
         cpu: 4500m

@@ -28,6 +28,7 @@ spec:
         app: fah-gpu-cpu
     spec:
       nodeSelector:
+        kubernetes.azure.com/agentpool: system
         nvidia.com/gpu: "true"
       tolerations:
         - key: "nvidia.com/gpu"
