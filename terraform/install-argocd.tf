@@ -1,17 +1,17 @@
 resource "helm_release" "argo_cd" {
-    name       = "argo-cd"
-    repository = "https://argoproj.github.io/argo-helm"
-    chart      = "argo-cd"
-    version    = "9.0.2"
-    namespace = "argo"
-    create_namespace = true
-    set {
-        name  = "server.service.type"
-        value = "ClusterIP"
-    }
+  name             = "argo-cd"
+  repository       = "https://argoproj.github.io/argo-helm"
+  chart            = "argo-cd"
+  version          = "9.0.2"
+  namespace        = "argo"
+  create_namespace = true
+  set {
+    name  = "server.service.type"
+    value = "ClusterIP"
+  }
 }
 
-resource "kubernetes_cluster_role_binding" "argocd_cluster_admin" {
+resource "kubernetes_cluster_role_binding_v1" "argocd_cluster_admin" {
   depends_on = [helm_release.argo_cd]
 
   metadata {
@@ -31,7 +31,7 @@ resource "kubernetes_cluster_role_binding" "argocd_cluster_admin" {
   }
 }
 
-resource "kubernetes_cluster_role_binding" "envoy_gateway_cluster_admin" {
+resource "kubernetes_cluster_role_binding_v1" "envoy_gateway_cluster_admin" {
   metadata {
     name = "envoy-gateway-cluster-admin"
   }

@@ -1,32 +1,93 @@
-This folder is designed to hold the terraform for managing the OpenCost cloud resources 
+This folder holds the Terraform for deploying OpenCost infrastructure on Azure Kubernetes Service (AKS).
 
-A few configurations are required in order to apply Terraform changes. 
+## Prerequisites
 
-First, set the path to the private key file. For example:
-```export TF_VAR_path_to_private_key="/Users/christian/.oci/oci_api_key.pem"```
+- Terraform v1.11 or newer installed locally.
+- Azure CLI authenticated (`az login`) or environment variables set for a service principal (`ARM_CLIENT_ID`, `ARM_CLIENT_SECRET`, `ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`).
+- A storage account and blob container to hold remote Terraform state.
 
-Next, create a .tfvars file with the required OCI configuration information. The required information can be exported from the Oracle Cloud Console and is as follows: 
+## Backend configuration
 
-| Variable       | Example                                         |
-| -------------- | ----------------------------------------------- |
-| tenancy_id     | `tenancy_id = ocid1.tenancy.oc1..exampleid`     |
-| compartment_id | `compartment_id = ocid1.tenancy.oc1..exampleid` |
-| user_id        | `user_id = ocid1.user.oc1..exampleid`           |
-| fingerprint    | `fingerprint = exampleid`                       |
+The Terraform backend now uses Azure Blob Storage. Provide the backend settings at init time (either with `-backend-config` flags or an `.hcl` file). Example `backend.hcl`:
 
-If you believe you need the required information above, but don't have access to the Oracle Cloud Console, please contact the maintainers for assistance. 
+```
+resource_group_name  = "rg-opencost-tf"
+storage_account_name = "opencosttfstate"
+container_name       = "tfstate"
+key                  = "terraform.tfstate"
+```
 
-## Spot node pool defaults
+Initialize Terraform with:
 
-The demo cluster now provisions a dedicated spot node pool (default size of two nodes). You can override its behavior through the following variables:
+```
+terraform init -backend-config=backend.hcl
+```
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `spot_node_pool_name` | `np-spot` | Name assigned to the spot node pool |
-| `spot_node_shape` | `VM.Standard3.Flex` | OCI shape used for the spot workers |
-| `spot_node_ocpus` | `2` | OCPUs requested when using a Flex shape |
-| `spot_node_memory_in_gbs` | `16` | Memory (GB) requested when using a Flex shape |
-| `spot_node_pool_size` | `2` | Number of spot nodes maintained in the pool |
-| `spot_node_boot_volume_size_gbs` | `150` | Boot volume size (GB) for each spot node |
-| `spot_preemption_action_type` | `TERMINATE` | Action performed when OCI reclaims a spot instance |
-| `spot_preserve_boot_volume` | `false` | Whether to keep the boot volume when a spot node is preempted |
+## Required variables
+
+Create a `.tfvars` file to supply Azure configuration. At minimum:
+
+```
+location              = "eastus"
+resource_group_name   = "rg-opencost"
+cluster_name          = "opencost"
+dns_prefix            = "opencost"
+subscription_id       = "00000000-0000-0000-0000-000000000000" # optional if using `az login`
+tenant_id             = "00000000-0000-0000-0000-000000000000" # optional if using `az login`
+environment           = "demo"
+
+# Optional: override node pools
+system_node_pool = {
+  name                 = "system"
+  vm_size              = "Standard_D4s_v5"
+  count                = 3
+  os_disk_size_gb      = 128
+  max_pods             = 110
+  only_critical_addons = true
+  zones                = []
+}
+
+spot_node_pool = {
+  enabled             = true
+  name                = "spot"
+  vm_size             = "Standard_D4ads_v5"
+  count               = 2
+  os_disk_size_gb     = 150
+  enable_auto_scaling = true
+  min_count           = 1
+  max_count           = 4
+  eviction_policy     = "Delete"
+  max_price           = -1
+  node_labels = {
+    "kubernetes.azure.com/scalesetpriority" = "spot"
+  }
+  node_taints = [
+    "kubernetes.azure.com/scalesetpriority=spot:NoSchedule"
+  ]
+  zones = []
+}
+
+gpu_node_pool = {
+  enabled             = false
+  name                = "gpu"
+  vm_size             = "Standard_NC4as_T4_v3"
+  count               = 1
+  os_disk_size_gb     = 150
+  enable_auto_scaling = false
+  min_count           = 1
+  max_count           = 2
+  node_labels = {
+    accelerator = "gpu"
+  }
+  node_taints = []
+  zones       = []
+}
+```
+
+You can disable the GPU pool by setting `gpu_node_pool.enabled = false` if your subscription lacks GPU quota.
+
+## Outputs
+
+- `kubeconfig` — path to the generated kubeconfig targeting the AKS cluster
+- `aks_cluster_name` — AKS cluster name
+- `resource_group_name` — resource group containing the AKS resources

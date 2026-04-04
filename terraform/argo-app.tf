@@ -7,11 +7,11 @@ resource "kubernetes_manifest" "argocd_application" {
       namespace = "argo"
       labels = {
         stage = "${var.environment}-app"
-        app = "opencost"
+        app   = "opencost"
       }
 
     }
-    spec = {      
+    spec = {
       project = "default"
 
       source = {
@@ -19,7 +19,7 @@ resource "kubernetes_manifest" "argocd_application" {
         targetRevision = var.argo_settings.target_revision
         path           = "argocd/appsets"
       }
-      
+
       destination = {
         server    = "https://kubernetes.default.svc"
         namespace = "argo"
@@ -27,17 +27,17 @@ resource "kubernetes_manifest" "argocd_application" {
 
       info = [
         {
-          name = "app-apps"
+          name  = "app-apps"
           value = "${var.environment}-app"
         }
       ]
-      
+
       syncPolicy = {
         automated = {
           prune    = true
           selfHeal = true
         }
-        syncOptions=[
+        syncOptions = [
           "Validate=false",
           "CreateNamespace=true",
           "PrunePropagationPolicy=foreground",
