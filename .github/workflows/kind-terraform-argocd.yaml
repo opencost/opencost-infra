@@ -12,7 +12,9 @@ permissions:
   contents: read
 
 env:
-  TF_WORKING_DIR: terraform
+  ENVIRONMENT: demo
+  ARGO_REPO: https://github.com/trucpd/opencost-infra.git
+  TARGET_REVISION: main
 
 jobs:
   kind-terraform-argocd:
@@ -21,29 +23,98 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.14.8
-          terraform_wrapper: false
-
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
 
       - name: Create KinD cluster
         uses: helm/kind-action@v1.8.0
         with:
           cluster_name: argocd-kind
 
-      - name: Terraform init (local backend)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -backend=false -input=false -upgrade
+      - name: Create argo namespace
+        run: kubectl create namespace argo || true
 
-      - name: Terraform apply Argo CD components to KinD
-        working-directory: ${{ env.TF_WORKING_DIR }}
+      - name: Install Argo CD via Helm
         run: |
-          terraform apply -input=false -auto-approve \
-            -target=helm_release.argo_cd \
-            -target=kubernetes_cluster_role_binding_v1.argocd_cluster_admin \
-            -target=kubernetes_cluster_role_binding_v1.envoy_gateway_cluster_admin \
-            -target=kubernetes_manifest.argocd_application
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update
+          helm install argo-cd argo/argo-cd \
+            --version 9.0.2 \
+            --namespace argo \
+            --set server.service.type=ClusterIP
+
+      - name: Apply cluster role bindings for Argo components
+        run: |
+          cat <<'EOF' | kubectl apply -f -
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: argocd-application-controller-cluster-admin
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+          - kind: ServiceAccount
+            name: argocd-application-controller
+            namespace: argo
+          ---
+          apiVersion: rbac.authorization.k8s.io/v1
+          kind: ClusterRoleBinding
+          metadata:
+            name: envoy-gateway-cluster-admin
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: cluster-admin
+          subjects:
+          - kind: ServiceAccount
+            name: envoy-gateway
+            namespace: envoy-gateway-system
+          EOF
+
+      - name: Apply root Argo CD Application
+        run: |
+          cat <<EOF | kubectl apply -f -
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          metadata:
+            name: opencost-root-app
+            namespace: argo
+            labels:
+              stage: "${ENVIRONMENT}-app"
+              app: "opencost"
+          spec:
+            project: default
+            source:
+              repoURL: ${ARGO_REPO}
+              targetRevision: ${TARGET_REVISION}
+              path: argocd/appsets
+            destination:
+              server: https://kubernetes.default.svc
+              namespace: argo
+            info:
+              - name: app-apps
+                value: "${ENVIRONMENT}-app"
+            syncPolicy:
+              automated:
+                prune: true
+                selfHeal: true
+              syncOptions:
+                - Validate=false
+                - CreateNamespace=true
+                - PrunePropagationPolicy=foreground
+                - RespectIgnoreDifferences=true
+                - PruneLast=true
+                - ApplyOutOfSyncOnly=true
+              retry:
+                limit: 5
+                backoff:
+                  duration: 50s
+                  maxDuration: 300s
+                  factor: 2
+            revisionHistoryLimit: 10
+          EOF
