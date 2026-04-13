@@ -15,8 +15,6 @@ opencost:
           sectionName: https-opencost-ui
       hostnames:
         - demo.infra.opencost.io
-    image:
-      fullImageName: ghcr.io/opencost/opencost-ui:test-41370af
     resources:
       requests:
         cpu: 100m
@@ -39,8 +37,6 @@ opencost:
   exporter:
     prometheusDataSource:
       queryResolutionSeconds: "60"
-    image:
-      fullImageName: ghcr.io/opencost/opencost:develop-44016ce
     adminToken:
       enabled: true
       existingSecret: "opencost-admin-token"
