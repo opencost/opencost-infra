@@ -215,7 +215,7 @@ jobs:
 
           echo "version opts: '$versionOpts'"
           echo "container opts: '$containerOpts'"
-          helm install --repo https://opencost.github.io/opencost-helm-chart $TARGET_NAMESPACE opencost \
+          HELM_DRIVER=configmap helm install --repo https://opencost.github.io/opencost-helm-chart $TARGET_NAMESPACE opencost \
             -n $TARGET_NAMESPACE \
             -f /tmp/values.yaml \
             $versionOpts $containerOpts
