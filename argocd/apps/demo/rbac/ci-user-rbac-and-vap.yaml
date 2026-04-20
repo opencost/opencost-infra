@@ -1,0 +1,580 @@
+# CI user: OCI IAM user mapped to Kubernetes User with this name.
+# Helm: set HELM_DRIVER=configmap in CI so release metadata is not stored in Secrets.
+#
+# Apply as cluster admin:
+#   kubectl apply -f ci-user-rbac-and-vap.yaml
+#
+# Remove any existing cluster-admin binding for this user, e.g.:
+#   kubectl delete clusterrolebinding ci-cluster-admin --ignore-not-found
+#
+# Notes:
+# - RBAC blocks Secret GET/LIST and exec; VAP adds defense-in-depth for writes/CONNECT.
+# - ValidatingAdmissionPolicy does not apply to Secret GET/LIST; rely on RBAC for reads.
+#
+# Threat model if CI can create ClusterRole + ClusterRoleBinding:
+# - NOT fully safe: anyone with this kube identity can create a permissive ClusterRole and a
+#   ClusterRoleBinding to themselves → effective cluster admin (including secrets/exec), bypassing
+#   the "no secrets / no exec" RBAC on the ci-admin-no-secrets-no-exec ClusterRole itself.
+# - Your VAPs still block writes IN protected namespaces; they do NOT block cluster-scoped RBAC that
+#   grants access everywhere (including reading kube-system secrets).
+# - Mitigations: protect OCI/API keys; rotate creds; separate break-glass identity; audit logs;
+# - VAPs below (deny-ci-dangerous-rbac-rules, deny-ci-privileged-rbac-bindings) limit ClusterRole/
+#   Role rules and bindings to cluster-admin/admin; not a complete escape hatch (e.g. custom wide
+#   ClusterRoles are still possible).
+#
+# API audit (implicit RBAC deny = not listed in ClusterRole; VAP deny-ci-sensitive-api-writes = CI
+# cannot CREATE/UPDATE/DELETE those types even if RBAC were mis-typed):
+# - Allowed for typical PR/Helm workloads: core (no secrets/exec subresources), apps, batch, autoscaling,
+#   networking.k8s.io, gateway.networking.k8s.io, gateway.envoyproxy.io, policy, coordination,
+#   discovery, limited storage.k8s.io (see rules), rbac, apiextensions CRDs.
+# - Not granted (no read/write): Secrets, SealedSecrets, cert-manager/acme, Argo CD types, admission
+#   webhooks / APIService / TokenReview / CSR, most cluster-scoped infra (nodes/PV/StorageClass, etc.
+#   removed or never added—tune if CI must manage them).
+# - If CI must manage Prometheus CRDs or Kubecost turndowns, remove those groups from
+#   deny-ci-sensitive-api-writes or grant narrowly in ClusterRole (not recommended).
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ci-admin-no-secrets-no-exec
+  labels:
+    app.kubernetes.io/managed-by: manual
+rules:
+  # core/v1 — no secrets; no pods/exec | pods/attach | pods/portforward
+  # Omit nodes, persistentvolumes unless CI must manage cluster storage/nodes (add back if needed).
+  - apiGroups: [""]
+    resources:
+      - bindings
+      - componentstatuses
+      - configmaps
+      - endpoints
+      - events
+      - limitranges
+      - namespaces
+      - persistentvolumeclaims
+      - pods
+      - pods/status
+      - pods/log
+      - pods/eviction
+      - pods/binding
+      - podtemplates
+      - replicationcontrollers
+      - resourcequotas
+      - serviceaccounts
+      - services
+    verbs: ["*"]
+
+  # Read-only cluster metadata often needed for Helm/scheduling (no create/update nodes or StorageClasses)
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "csidrivers"]
+    verbs: ["get", "list", "watch"]
+
+  # Namespace-scoped built-ins (omit admissionregistration, cert-manager, sealed-secrets, argo, etc.)
+  - apiGroups:
+      - apps
+      - batch
+      - autoscaling
+      - networking.k8s.io
+      - gateway.networking.k8s.io
+      - gateway.envoyproxy.io
+      - policy
+      - coordination.k8s.io
+      - discovery.k8s.io
+    resources: ["*"]
+    verbs: ["*"]
+
+  # Only namespaced Storage API objects (omit StorageClass/CSIDriver/VolumeAttachment — cluster admin)
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - csistoragecapacities
+    verbs: ["*"]
+
+  # RBAC (namespace + cluster): full lifecycle for Helm; see file header for escalation risk
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+    verbs: ["*"]
+
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["*"]
+
+  # Optional: add operator CRD groups your CI needs, e.g.:
+  # - apiGroups: ["cert-manager.io"]
+  #   resources: ["*"]
+  #   verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ci-admin-no-secrets-no-exec-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ci-admin-no-secrets-no-exec
+subjects:
+  - kind: User
+    name: "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a"
+    apiGroup: rbac.authorization.k8s.io
+---
+# Block CI in protected namespaces (namespaced API objects)
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-in-protected-namespaces
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["*"]
+        apiVersions: ["*"]
+        operations: ["*"]
+        resources: ["*"]
+        scope: Namespaced
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !(
+          request.namespace in [
+            "argo",
+            "cert-manager",
+            "chaoskube",
+            "cnpg-system",
+            "default",
+            "envoy-gateway-system",
+            "folding-at-home",
+            "gpu-operator",
+            "iperf-demo",
+            "kube-node-lease",
+            "kube-public",
+            "kube-system",
+            "load-generator",
+            "network-costs",
+            "network-load-gen",
+            "opencost",
+            "prometheus-system",
+            "sealed-secrets"
+          ]
+        )
+      message: "CI user is not allowed in this namespace"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-in-protected-namespaces-binding
+spec:
+  policyName: deny-ci-in-protected-namespaces
+  validationActions:
+    - Deny
+---
+# Block CI from managing Namespace objects whose names are protected
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-protected-namespace-objects
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["*"]
+        resources: ["namespaces"]
+        scope: Cluster
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !(
+          has(object.metadata) && has(object.metadata.name) &&
+          object.metadata.name in [
+            "argo",
+            "cert-manager",
+            "chaoskube",
+            "cnpg-system",
+            "default",
+            "envoy-gateway-system",
+            "folding-at-home",
+            "gpu-operator",
+            "iperf-demo",
+            "kube-node-lease",
+            "kube-public",
+            "kube-system",
+            "load-generator",
+            "network-costs",
+            "network-load-gen",
+            "opencost",
+            "prometheus-system",
+            "sealed-secrets"
+          ]
+        )
+      message: "CI user is not allowed to manage this Namespace"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-protected-namespace-objects-binding
+spec:
+  policyName: deny-ci-protected-namespace-objects
+  validationActions:
+    - Deny
+---
+# Defense in depth: block Secret writes by CI (RBAC already denies; this catches misconfiguration)
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-secret-writes
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        # VAP only allows: *, CONNECT, CREATE, DELETE, UPDATE (PATCH maps to UPDATE at admission)
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["secrets"]
+        scope: Namespaced
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a"
+      message: "CI user cannot create or change Secrets"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-secret-writes-binding
+spec:
+  policyName: deny-ci-secret-writes
+  validationActions:
+    - Deny
+---
+# Defense in depth: block exec / attach / port-forward (CONNECT)
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-pod-connect-subresources
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["*"]
+        operations: ["CONNECT"]
+        resources: ["pods/exec", "pods/attach", "pods/portforward"]
+        scope: Namespaced
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a"
+      message: "CI user cannot exec, attach, or port-forward to Pods"
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-pod-connect-subresources-binding
+spec:
+  policyName: deny-ci-pod-connect-subresources
+  validationActions:
+    - Deny
+---
+# Limit escalation: CI cannot define ClusterRole/Role rules that grant Secrets, full */* wildcards,
+# or pod exec/attach/port-forward. Applies to CREATE and UPDATE (PATCH maps to UPDATE).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-dangerous-rbac-rules
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["clusterroles"]
+        scope: Cluster
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["roles"]
+        scope: Namespaced
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !has(object.rules) ||
+        !object.rules.exists(rule,
+          rule.resources.exists(r, r == "secrets") &&
+          (size(rule.apiGroups) == 0 || rule.apiGroups.exists(g, g == ""))
+        )
+      message: >-
+        CI cannot create RBAC rules that grant access to Secrets (core group)
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !has(object.rules) ||
+        !object.rules.exists(rule,
+          rule.resources.exists(r, r == "*") &&
+          (size(rule.apiGroups) == 0 || rule.apiGroups.exists(g, g == ""))
+        )
+      message: >-
+        CI cannot create RBAC rules with resources=* on the core API group (includes Secrets)
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !has(object.rules) ||
+        !object.rules.exists(rule,
+          rule.apiGroups.exists(g, g == "*") && rule.resources.exists(r, r == "*")
+        )
+      message: >-
+        CI cannot create RBAC rules with apiGroups=* and resources=*
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !has(object.rules) ||
+        !object.rules.exists(rule,
+          rule.resources.exists(r, r == "pods/exec" || r == "pods/attach" || r == "pods/portforward")
+        )
+      message: >-
+        CI cannot create RBAC rules for pods/exec, pods/attach, or pods/portforward
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-dangerous-rbac-rules-binding
+spec:
+  policyName: deny-ci-dangerous-rbac-rules
+  validationActions:
+    - Deny
+---
+# Limit escalation: CI cannot bind to built-in highly-privileged ClusterRoles (cluster-wide or via RoleBinding).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-privileged-rbac-bindings
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["clusterrolebindings"]
+        scope: Cluster
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["rolebindings"]
+        scope: Namespaced
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a" ||
+        !(object.roleRef.kind == "ClusterRole" && (object.roleRef.name == "cluster-admin" || object.roleRef.name == "admin"))
+      message: >-
+        CI cannot bind to the built-in cluster-admin or admin ClusterRoles
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-privileged-rbac-bindings-binding
+spec:
+  policyName: deny-ci-privileged-rbac-bindings
+  validationActions:
+    - Deny
+---
+# Deny CI any write to sensitive / platform API groups (defense in depth; RBAC should not grant these).
+# Does not include customresourcedefinitions (Helm may install CRDs). Remove groups from this policy if
+# CI must manage them (e.g. drop monitoring.coreos.com if PRs deploy PrometheusRules).
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: deny-ci-sensitive-api-writes
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      # Sealed secrets & cert material
+      - apiGroups: ["bitnami.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["sealedsecrets"]
+        scope: Namespaced
+      - apiGroups: ["acme.cert-manager.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["challenges", "orders"]
+        scope: Namespaced
+      - apiGroups: ["cert-manager.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["certificates", "certificaterequests", "issuers"]
+        scope: Namespaced
+      - apiGroups: ["cert-manager.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["clusterissuers"]
+        scope: Cluster
+      # Argo CD
+      - apiGroups: ["argoproj.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["applications", "applicationsets", "appprojects"]
+        scope: Namespaced
+      # Control plane / auth / CSR
+      - apiGroups: ["admissionregistration.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources:
+          - mutatingwebhookconfigurations
+          - validatingwebhookconfigurations
+          - validatingadmissionpolicies
+          - validatingadmissionpolicybindings
+        scope: Cluster
+      - apiGroups: ["apiregistration.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["apiservices"]
+        scope: Cluster
+      - apiGroups: ["authentication.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["selfsubjectreviews", "tokenreviews"]
+        scope: Cluster
+      - apiGroups: ["authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["localsubjectaccessreviews"]
+        scope: Namespaced
+      - apiGroups: ["authorization.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources:
+          - selfsubjectaccessreviews
+          - selfsubjectrulesreviews
+          - subjectaccessreviews
+        scope: Cluster
+      - apiGroups: ["certificates.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["certificatesigningrequests"]
+        scope: Cluster
+      # Observability operators (remove this block from matchConstraints if CI must apply these)
+      - apiGroups: ["monitoring.coreos.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["*"]
+        scope: Namespaced
+      # Metrics API
+      - apiGroups: ["metrics.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nodemetrics"]
+        scope: Cluster
+      - apiGroups: ["metrics.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["podmetrics"]
+        scope: Namespaced
+      # Node Feature Discovery
+      - apiGroups: ["nfd.k8s-sigs.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nodefeaturegroups", "nodefeatures"]
+        scope: Namespaced
+      - apiGroups: ["nfd.k8s-sigs.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nodefeaturerules"]
+        scope: Cluster
+      # GPU / OKE extras
+      - apiGroups: ["nvidia.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["clusterpolicies"]
+        scope: Cluster
+      - apiGroups: ["nvidia.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nvidiadrivers"]
+        scope: Cluster
+      - apiGroups: ["oci.oraclecloud.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["nodeoperationrules"]
+        scope: Cluster
+      # PostgreSQL operator
+      - apiGroups: ["postgresql.cnpg.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources:
+          - backups
+          - clusters
+          - databases
+          - imagecatalogs
+          - poolers
+          - publications
+          - scheduledbackups
+          - subscriptions
+        scope: Namespaced
+      - apiGroups: ["postgresql.cnpg.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["clusterimagecatalogs"]
+        scope: Cluster
+      # Kubecost
+      - apiGroups: ["kubecost.com"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["turndownschedules"]
+        scope: Cluster
+      # Gateway experimental (not gateway.networking.k8s.io / gateway.envoyproxy.io used by CI)
+      - apiGroups: ["gateway.networking.x-k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["xbackendtrafficpolicies", "xlistenersets"]
+        scope: Namespaced
+      - apiGroups: ["gateway.networking.x-k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["xmeshes"]
+        scope: Cluster
+      # Runtime / ingress class
+      - apiGroups: ["node.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["runtimeclasses"]
+        scope: Cluster
+      - apiGroups: ["networking.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["ingressclasses"]
+        scope: Cluster
+      # Flow control / scheduling / storage cluster resources
+      - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["flowschemas", "prioritylevelconfigurations"]
+        scope: Cluster
+      - apiGroups: ["scheduling.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources: ["priorityclasses"]
+        scope: Cluster
+      - apiGroups: ["storage.k8s.io"]
+        apiVersions: ["*"]
+        operations: ["CREATE", "UPDATE", "DELETE"]
+        resources:
+          - csidrivers
+          - csinodes
+          - storageclasses
+          - volumeattachments
+        scope: Cluster
+  validations:
+    - expression: >-
+        request.userInfo.username != "ocid1.user.oc1..aaaaaaaabqbhlevch2trbqw2qy2yalyrdyzkrzoqkzn3d77iiduttopnbx4a"
+      message: >-
+        CI cannot create, update, or delete this API resource type (platform / secrets / cert / operator)
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: deny-ci-sensitive-api-writes-binding
+spec:
+  policyName: deny-ci-sensitive-api-writes
+  validationActions:
+    - Deny
