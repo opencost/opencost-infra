@@ -23,6 +23,7 @@ prometheus:
           sectionName: https-prometheus
   prometheusSpec:
     serviceMonitorSelectorNilUsesHelmValues: false
+    retention: 360d
     # 75% of np-demo-large VM (6 OCPU, 96GiB allocatable)
     nodeSelector:
       oke.oraclecloud.com/pool.name: np-demo-large
