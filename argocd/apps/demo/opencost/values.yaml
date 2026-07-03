@@ -50,7 +50,7 @@ opencost:
       limits:
         memory: 70Gi
     image:
-      fullImageName: ghcr.io/opencost/opencost:develop-eebce4c
+      fullImageName: ghcr.io/opencost/opencost:develop-67e53fa
   cloudIntegrationSecret: "opencost-cloud-integration"
   cloudCost:
     enabled: true
