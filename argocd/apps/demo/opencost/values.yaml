@@ -22,7 +22,7 @@ opencost:
       limits:
         memory: 2Gi
     image:
-      fullImageName: ghcr.io/opencost/opencost-ui:develop-5cca694
+      fullImageName: ghcr.io/opencost/opencost-ui:develop-523fa1c
   mcp:
     httpRoute:
       enabled: true
