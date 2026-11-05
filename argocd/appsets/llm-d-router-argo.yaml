@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: llm-d-router
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: main
+      files:
+      - path: "argocd/apps/*/llm-d-router/values.yaml"
+  template:
+    metadata:
+      name: 'llm-d-router-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "0"
+    spec:
+      project: default
+      sources:
+        - repoURL: oci://ghcr.io/llm-d/charts/llm-d-router-gateway
+          chart: llm-d-router-gateway
+          targetRevision: v1.0.0
+          helm:
+            releaseName: llm-d
+            kubeVersion: "1.31.1"
+            valueFiles:
+            - '$values/argocd/apps/{{ index .path.segments 2 }}/llm-d-router/values.yaml'
+        - repoURL: https://github.com/opencost/opencost-infra.git
+          targetRevision: main
+          ref: values
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: vllm-inference
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true

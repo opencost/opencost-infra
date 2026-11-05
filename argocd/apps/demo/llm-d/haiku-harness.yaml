@@ -9,7 +9,7 @@ data:
     # POSIX sh: curlimages/curl has /bin/sh and no bash.
     set -eu
 
-    endpoint="${VLLM_ENDPOINT:-http://vllm-inference:8000/v1/chat/completions}"
+    endpoint="${VLLM_ENDPOINT:-http://llm-d-inference-gateway:80/v1/chat/completions}"
     concurrency="${CONCURRENCY:-3}"
     iterations="${ITERATIONS:-20}"
     model="${MODEL:-Qwen/Qwen2.5-1.5B-Instruct}"
@@ -17,15 +17,16 @@ data:
 
     echo "haiku harness endpoint=${endpoint} concurrency=${concurrency} iterations=${iterations}"
 
+    # Model download on a cold cache can take most of the startup probe (15m).
     i=0
-    while [ "$i" -lt 60 ]; do
+    while [ "$i" -lt 180 ]; do
       if curl -sf --max-time 5 "$health" >/dev/null; then
-        echo "vLLM ready"
+        echo "gateway ready"
         break
       fi
       i=$((i + 1))
-      if [ "$i" -eq 60 ]; then
-        echo "vLLM not ready" >&2
+      if [ "$i" -eq 180 ]; then
+        echo "gateway not ready" >&2
         exit 1
       fi
       sleep 5
@@ -110,7 +111,7 @@ spec:
                 - name: HOME
                   value: /tmp
                 - name: VLLM_ENDPOINT
-                  value: http://vllm-inference:8000/v1/chat/completions
+                  value: http://llm-d-inference-gateway:80/v1/chat/completions
                 - name: CONCURRENCY
                   value: "3"
                 - name: ITERATIONS

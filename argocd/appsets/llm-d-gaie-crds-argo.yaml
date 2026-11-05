@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: vllm-inference
+  name: llm-d-gaie-crds
 spec:
   goTemplate: true
   goTemplateOptions: ["missingkey=error"]
@@ -10,12 +10,14 @@ spec:
       repoURL: https://github.com/opencost/opencost-infra.git
       revision: main
       directories:
-      - path: "argocd/apps/*/vllm-inference"
+      - path: "argocd/apps/*/llm-d-gaie-crds"
   template:
     metadata:
-      name: 'vllm-inference-{{ index .path.segments 2 }}'
+      name: 'llm-d-gaie-crds-{{ index .path.segments 2 }}'
       labels:
         debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "-2"
     spec:
       project: default
       source:
@@ -31,3 +33,4 @@ spec:
           selfHeal: true
         syncOptions:
         - CreateNamespace=true
+        - ServerSideApply=true
