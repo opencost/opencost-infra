@@ -1,0 +1,53 @@
+# llm-d-router-gateway v1.0.0, optimized-baseline scheduling profile
+# (prefix-cache affinity + token load). Gateway mode: no sidecar proxy.
+# EPP requests are sized for a 2 OCPU node. The guide defaults (4 CPU /
+# 8Gi) are for the H100 reference pool and do not fit np2.
+provider:
+  name: agentgateway
+httpRoute:
+  create: true
+  inferenceGatewayName: llm-d-inference-gateway
+  requestTimeout: 300s
+router:
+  epp:
+    replicas: 1
+    flags:
+      v: 2
+    pluginsConfigFile: optimized-baseline-plugins.yaml
+    pluginsCustomConfig:
+      optimized-baseline-plugins.yaml: |
+        apiVersion: llm-d.ai/v1
+        kind: EndpointPickerConfig
+        plugins:
+        - type: approx-prefix-cache-producer
+        - type: inflight-load-producer
+        - type: prefix-cache-affinity-filter
+        - type: token-load-scorer
+        schedulingProfiles:
+        - name: default
+          plugins:
+          - pluginRef: prefix-cache-affinity-filter
+          - pluginRef: token-load-scorer
+    image:
+      registry: ghcr.io/llm-d
+      repository: llm-d-router-endpoint-picker
+      tag: v1.0.0
+      pullPolicy: IfNotPresent
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+  inferencePool:
+    create: true
+    failureMode: FailOpen
+  modelServers:
+    type: vllm
+    protocol: http
+    targetPorts:
+      - number: 8000
+    matchLabels:
+      llm-d.ai/guide: optimized-baseline
+      llm-d.ai/model: qwen2.5-1.5b-instruct

@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haiku-harness-script
+  namespace: vllm-inference
+data:
+  run-harness.sh: |
+    #!/bin/sh
+    # POSIX sh: curlimages/curl has /bin/sh and no bash.
+    set -eu
+
+    endpoint="${VLLM_ENDPOINT:-http://llm-d-inference-gateway:80/v1/chat/completions}"
+    concurrency="${CONCURRENCY:-3}"
+    iterations="${ITERATIONS:-20}"
+    model="${MODEL:-Qwen/Qwen2.5-1.5B-Instruct}"
+    health="${endpoint%/v1/chat/completions}/health"
+
+    echo "haiku harness endpoint=${endpoint} concurrency=${concurrency} iterations=${iterations}"
+
+    # Model download on a cold cache can take most of the startup probe (15m).
+    i=0
+    while [ "$i" -lt 180 ]; do
+      if curl -sf --max-time 5 "$health" >/dev/null; then
+        echo "gateway ready"
+        break
+      fi
+      i=$((i + 1))
+      if [ "$i" -eq 180 ]; then
+        echo "gateway not ready" >&2
+        exit 1
+      fi
+      sleep 5
+    done
+
+    topic() {
+      case $(($1 % 8)) in
+        0) printf '%s' kubernetes ;;
+        1) printf '%s' clouds ;;
+        2) printf '%s' GPUs ;;
+        3) printf '%s' "open source" ;;
+        4) printf '%s' costs ;;
+        5) printf '%s' monitoring ;;
+        6) printf '%s' inference ;;
+        *) printf '%s' containers ;;
+      esac
+    }
+
+    request() {
+      id=$1
+      subject=$(topic "$id")
+      payload=$(printf '{"model":"%s","messages":[{"role":"user","content":"Write a haiku about %s"}],"max_tokens":50,"temperature":0.8}' "$model" "$subject")
+      if resp=$(curl -sf --max-time 60 -X POST "$endpoint" -H "Content-Type: application/json" -d "$payload"); then
+        printf '%s request %s ok\n' "$(date +%H:%M:%S)" "$id"
+        printf '%s\n' "$resp"
+      else
+        printf '%s request %s failed\n' "$(date +%H:%M:%S)" "$id" >&2
+        return 1
+      fi
+    }
+
+    n=1
+    while [ "$n" -le "$iterations" ]; do
+      j=0
+      pids=""
+      while [ "$j" -lt "$concurrency" ]; do
+        request $((n * concurrency + j)) &
+        pids="$pids $!"
+        j=$((j + 1))
+      done
+      fail=0
+      for pid in $pids; do
+        wait "$pid" || fail=1
+      done
+      if [ "$fail" -ne 0 ]; then
+        exit 1
+      fi
+      n=$((n + 1))
+      sleep 2
+    done
+
+    echo "done requests=$((iterations * concurrency))"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: haiku-harness
+  namespace: vllm-inference
+  labels:
+    app: haiku-harness
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app: haiku-harness
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: harness
+              image: curlimages/curl:8.10.1
+              command:
+                - /bin/sh
+                - /scripts/run-harness.sh
+              env:
+                - name: HOME
+                  value: /tmp
+                - name: VLLM_ENDPOINT
+                  value: http://llm-d-inference-gateway:80/v1/chat/completions
+                - name: CONCURRENCY
+                  value: "3"
+                - name: ITERATIONS
+                  value: "20"
+                - name: MODEL
+                  value: Qwen/Qwen2.5-1.5B-Instruct
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 128Mi
+              securityContext:
+                runAsNonRoot: true
+                runAsUser: 1000
+                runAsGroup: 1000
+                readOnlyRootFilesystem: true
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                  readOnly: true
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: scripts
+              configMap:
+                name: haiku-harness-script
+            - name: tmp
+              emptyDir: {}
