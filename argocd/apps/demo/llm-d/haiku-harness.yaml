@@ -10,9 +10,10 @@ data:
     set -eu
 
     endpoint="${VLLM_ENDPOINT:-http://llm-d-inference-gateway:80/v1/chat/completions}"
-    concurrency="${CONCURRENCY:-3}"
+    # Above vLLM --max-num-seqs (16) so the waiting queue is non-empty.
+    concurrency="${CONCURRENCY:-24}"
     iterations="${ITERATIONS:-20}"
-    model="${MODEL:-Qwen/Qwen2.5-1.5B-Instruct}"
+    model="${MODEL:-qwen2.5-1.5b-instruct}"
     health="${endpoint%/v1/chat/completions}/health"
 
     echo "haiku harness endpoint=${endpoint} concurrency=${concurrency} iterations=${iterations}"
@@ -113,11 +114,11 @@ spec:
                 - name: VLLM_ENDPOINT
                   value: http://llm-d-inference-gateway:80/v1/chat/completions
                 - name: CONCURRENCY
-                  value: "3"
+                  value: "24"
                 - name: ITERATIONS
                   value: "20"
                 - name: MODEL
-                  value: Qwen/Qwen2.5-1.5B-Instruct
+                  value: qwen2.5-1.5b-instruct
               resources:
                 requests:
                   cpu: 100m

@@ -9,4 +9,5 @@ To turn off the llm-d A10 stack, move these ApplicationSets here:
 - `llm-d-gaie-crds-argo.yaml`
 - `llm-d-gateway-argo.yaml`
 - `llm-d-router-argo.yaml`
+- `llm-d-modelservice-argo.yaml`
 - `llm-d-argo.yaml`
