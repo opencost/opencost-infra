@@ -1,0 +1,17 @@
+# agentgateway v1.5.0 (llm-d v1.0.0 release matrix). inferenceExtension
+# turns on Gateway API Inference Extension routing to the llm-d EPP.
+# The controller stays in vllm-inference: that namespace is already on the
+# nightly cleanup allowlist and the CI admission namespace list.
+image:
+  registry: cr.agentgateway.dev
+  tag: v1.5.0
+  pullPolicy: IfNotPresent
+inferenceExtension:
+  enabled: true
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

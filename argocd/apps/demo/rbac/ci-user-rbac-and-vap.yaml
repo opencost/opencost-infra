@@ -155,7 +155,8 @@ spec:
             "network-load-gen",
             "opencost",
             "prometheus-system",
-            "sealed-secrets"
+            "sealed-secrets",
+            "vllm-inference"
           ]
         )
       message: "CI user is not allowed in this namespace"
@@ -206,7 +207,8 @@ spec:
             "network-load-gen",
             "opencost",
             "prometheus-system",
-            "sealed-secrets"
+            "sealed-secrets",
+            "vllm-inference"
           ]
         )
       message: "CI user is not allowed to manage this Namespace"

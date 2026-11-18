@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: llm-d-gaie-crds
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - git:
+      repoURL: https://github.com/opencost/opencost-infra.git
+      revision: main
+      directories:
+      - path: "argocd/apps/*/llm-d"
+  template:
+    metadata:
+      name: 'llm-d-gaie-crds-{{ index .path.segments 2 }}'
+      labels:
+        debug.argocd.argoproj.io/stage: '{{ index .path.segments 2 }}'
+      annotations:
+        argocd.argoproj.io/sync-wave: "-2"
+    spec:
+      project: default
+      source:
+        # GAIE v1.6.2 publishes no CRD chart. v1-manifests.yaml is this base.
+        repoURL: https://github.com/kubernetes-sigs/gateway-api-inference-extension.git
+        targetRevision: v1.6.2
+        path: config/crd/bases
+        directory:
+          recurse: false
+          include: inference.networking.k8s.io_inferencepools.yaml
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: vllm-inference
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
